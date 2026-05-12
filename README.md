@@ -10,3 +10,5 @@ Yuri Ferro Soares: Telas de Relatorios
 João Vitor: Tela de perfil
 
 Otávio Henrique: Telas de Login \ Cadastro \ Esqueceu a senha
+
+Lucas Gabriel Rocha: Notificação
