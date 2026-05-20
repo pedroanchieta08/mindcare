@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 import 'login_screen.dart';
+import 'relatorios_prof.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserModel user;
@@ -53,7 +54,10 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.text,
                     ),
                   ),
-                  Text(user.email, style: const TextStyle(color: AppColors.text)),
+                  Text(
+                    user.email,
+                    style: const TextStyle(color: AppColors.text),
+                  ),
                 ],
               ),
             ),
@@ -112,16 +116,24 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Row(
-              children: const [
+              children: [
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.document_scanner,
                     title: 'Relatório',
                     subtitle: 'Consultar relatórios',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RelatoriosProf(user: user),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                SizedBox(width: 12),
-                Expanded(
+                const SizedBox(width: 12),
+                const Expanded(
                   child: _ActionCard(
                     icon: Icons.notifications,
                     title: 'Notificações',
@@ -161,40 +173,45 @@ class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _ActionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.largeDetail),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 34, color: AppColors.smallDetail),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.largeDetail),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 34, color: AppColors.smallDetail),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 12, color: AppColors.text),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(fontSize: 12, color: AppColors.text),
+            ),
+          ],
+        ),
       ),
     );
   }
