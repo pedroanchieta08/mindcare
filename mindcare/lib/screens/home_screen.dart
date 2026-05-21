@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 import 'login_screen.dart';
-import 'relatorios_prof.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserModel user;
@@ -122,14 +121,7 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.document_scanner,
                     title: 'Relatório',
                     subtitle: 'Consultar relatórios',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RelatoriosProf(user: user),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   ),
                 ),
                 const SizedBox(width: 12),

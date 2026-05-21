@@ -1,22 +1,36 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../models/user_model.dart';
+import '../models/profissional_model.dart';
+import 'login_screen.dart';
 
-class RelatoriosProf extends StatefulWidget {
-  final UserModel user;
+class RelatoriosProfissional extends StatefulWidget {
+  final ProfissionalModel profissional;
 
-  const RelatoriosProf({super.key, required this.user});
+  const RelatoriosProfissional({super.key, required this.profissional});
 
   @override
-  State<RelatoriosProf> createState() => _RelatoriosProfState();
+  State<RelatoriosProfissional> createState() => _RelatoriosProfissionalState();
 }
 
-class _RelatoriosProfState extends State<RelatoriosProf> {
+class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
+  void _logout() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Sair',
+          onPressed: () => _logout(),
+        ),
         title: const Text('Meus Pacientes'),
         backgroundColor: AppColors.smallDetail,
         elevation: 0,
