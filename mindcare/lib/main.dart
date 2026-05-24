@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'constants/app_colors.dart';
 import 'screens/login_screen.dart';
+import 'screens/sentimental.dart';
+import 'screens/calendar.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  initializeDateFormatting('pt_BR');
   runApp(const MindCareApp());
 }
 
@@ -34,7 +38,7 @@ class MindCareApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(),
+      home: const SentimentalPage(),
     );
   }
 }
