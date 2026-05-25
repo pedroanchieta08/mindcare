@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 import 'login_screen.dart';
+import 'perfil_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserModel user;
@@ -132,20 +133,26 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
-              children: const [
-                Expanded(
+              children: [
+                const Expanded(
                   child: _ActionCard(
                     icon: Icons.calendar_month,
                     title: 'Calendario',
                     subtitle: 'Calendario de emoções',
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.person,
                     title: 'Menu',
                     subtitle: 'Menu de configurações',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -161,41 +168,50 @@ class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap; 
 
   const _ActionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap, 
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.largeDetail),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 34, color: AppColors.smallDetail),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
+    return InkWell(
+      onTap: onTap,
+      splashColor: onTap == null ? Colors.transparent : null,
+      highlightColor: onTap == null ? Colors.transparent : null,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.largeDetail),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 34, color: AppColors.smallDetail),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 12, color: AppColors.text),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(fontSize: 12, color: AppColors.text),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
