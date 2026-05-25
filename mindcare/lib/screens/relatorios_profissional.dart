@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import '../constants/app_colors.dart';
 import '../models/profissional_model.dart';
 import 'login_screen.dart';
+
+class GraphData {
+  final String mes;
+  final double valor;
+  GraphData(this.mes, this.valor);
+}
 
 class RelatoriosProfissional extends StatefulWidget {
   final ProfissionalModel profissional;
@@ -215,28 +222,91 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(name),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          insetPadding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
             children: [
-              Text(subtitle),
-              const SizedBox(height: 12),
-              const Text('Resumo do relatório:'),
-              const SizedBox(height: 8),
-              const Text('- Item 1: informação...'),
-              const SizedBox(height: 4),
-              const Text('- Item 2: informação...'),
+              Expanded(child: Text('Relatório de $name')),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Fechar'),
+              ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Fechar'),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                Text(subtitle, style: const TextStyle(color: Colors.black54)),
+                const SizedBox(height: 16),
+                const Text(
+                  'Resumo do Relatório:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(right: 12),
+                  child: SfCartesianChart(
+                    primaryXAxis: CategoryAxis(
+                      majorGridLines: const MajorGridLines(width: 0),
+                      axisLine: const AxisLine(width: 1, color: Colors.black54),
+                      labelStyle: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 12,
+                      ),
+                    ),
+
+                    primaryYAxis: NumericAxis(
+                      minimum: 0,
+                      maximum: 35,
+                      interval: 10,
+                      axisLine: const AxisLine(width: 1, color: Colors.black54),
+                      majorGridLines: const MajorGridLines(
+                        width: 0.5,
+                        color: Colors.black12,
+                      ),
+                    ),
+                    series: <CartesianSeries<GraphData, String>>[
+                      BarSeries<GraphData, String>(
+                        dataSource: [
+                          GraphData('Jan', 20),
+                          GraphData('Fev', 30),
+                          GraphData('Mar', 15),
+                          GraphData('Abr', 25),
+                          GraphData('Mai', 10),
+                          GraphData('Jun', 30),
+                        ],
+                        xValueMapper: (GraphData data, _) => data.mes,
+                        yValueMapper: (GraphData data, _) => data.valor,
+                        color: AppColors.smallDetail,
+                        width: 0.6,
+                        borderRadius: BorderRadius.zero,
+
+                        dataLabelSettings: const DataLabelSettings(
+                          isVisible: true,
+                          textStyle: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+          ),
+          actions: [
             ElevatedButton(
               onPressed: () {
-                // Aqui você pode adicionar ação de marcar como visto
                 Navigator.of(context).pop();
               },
               child: const Text('Marcar visto'),
