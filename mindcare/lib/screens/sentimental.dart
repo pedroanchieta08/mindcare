@@ -58,7 +58,10 @@ class _SentimentalPageState extends State<SentimentalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
+                  _BotaoVoltar(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                  ),
+                  const SizedBox(height: 12),
                   _Emoji(emoji: _humorSelect?.emoji ?? ''),
                   const SizedBox(height: 10),
                   _SeletorHumor(
@@ -77,6 +80,20 @@ class _SentimentalPageState extends State<SentimentalPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BotaoVoltar extends StatelessWidget {
+  const _BotaoVoltar({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
     );
   }
 }
