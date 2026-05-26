@@ -1,13 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 import '../constants/app_colors.dart';
 import '../models/profissional_model.dart';
 import 'login_screen.dart';
 
-class GraphData {
-  final String mes;
-  final double valor;
-  GraphData(this.mes, this.valor);
+class EmotionDistribution {
+  final String label;
+  final int percent;
+  final Color color;
+  final IconData icon;
+
+  const EmotionDistribution({
+    required this.label,
+    required this.percent,
+    required this.color,
+    required this.icon,
+  });
+}
+
+class ReportItem {
+  final String name;
+  final String subtitle;
+  bool isSeen;
+  final List<EmotionDistribution> emotions;
+
+  ReportItem({
+    required this.name,
+    required this.subtitle,
+    required this.isSeen,
+    required this.emotions,
+  });
 }
 
 class RelatoriosProfissional extends StatefulWidget {
@@ -20,12 +41,101 @@ class RelatoriosProfissional extends StatefulWidget {
 }
 
 class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
+  late final List<ReportItem> _reports;
+
+  @override
+  void initState() {
+    super.initState();
+    _reports = [
+      ReportItem(
+        name: 'Fatima',
+        subtitle: 'Relatorio · 01 abr - 07 abr · 2026',
+        isSeen: false,
+        emotions: const [
+          EmotionDistribution(
+            label: 'Calmo',
+            percent: 45,
+            color: Color(0xFF188D14),
+            icon: Icons.sentiment_satisfied,
+          ),
+          EmotionDistribution(
+            label: 'Feliz',
+            percent: 25,
+            color: Color(0xFF2E91D9),
+            icon: Icons.sentiment_very_satisfied,
+          ),
+          EmotionDistribution(
+            label: 'Ansioso',
+            percent: 20,
+            color: Color(0xFFE5C92E),
+            icon: Icons.sentiment_neutral,
+          ),
+          EmotionDistribution(
+            label: 'Irritado',
+            percent: 5,
+            color: Color(0xFFF25E5E),
+            icon: Icons.sentiment_dissatisfied,
+          ),
+          EmotionDistribution(
+            label: 'Triste',
+            percent: 5,
+            color: Color(0xFFF25E5E),
+            icon: Icons.sentiment_very_dissatisfied,
+          ),
+        ],
+      ),
+      ReportItem(
+        name: 'Otavio',
+        subtitle: 'Relatorio · 12 fev - 18 jun · 2026',
+        isSeen: true,
+        emotions: const [
+          EmotionDistribution(
+            label: 'Calmo',
+            percent: 30,
+            color: Color(0xFF188D14),
+            icon: Icons.sentiment_satisfied,
+          ),
+          EmotionDistribution(
+            label: 'Feliz',
+            percent: 35,
+            color: Color(0xFF2E91D9),
+            icon: Icons.sentiment_very_satisfied,
+          ),
+          EmotionDistribution(
+            label: 'Ansioso',
+            percent: 15,
+            color: Color(0xFFE5C92E),
+            icon: Icons.sentiment_neutral,
+          ),
+          EmotionDistribution(
+            label: 'Irritado',
+            percent: 10,
+            color: Color(0xFFF25E5E),
+            icon: Icons.sentiment_dissatisfied,
+          ),
+          EmotionDistribution(
+            label: 'Triste',
+            percent: 10,
+            color: Color(0xFFF25E5E),
+            icon: Icons.sentiment_very_dissatisfied,
+          ),
+        ],
+      ),
+    ];
+  }
+
   void _logout() {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
+  }
+
+  void _toggleSeen(int index) {
+    setState(() {
+      _reports[index].isSeen = !_reports[index].isSeen;
+    });
   }
 
   @override
@@ -64,20 +174,10 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
               ),
             ),
             const SizedBox(height: 12),
-            _buildReportCard(
-              name: 'Fátima',
-              subtitle: 'Relatório · 01 abr - 07 abr · 2026',
-              status: 'NOVO',
-              positiveButton: 'Ver relatório',
-              negativeButton: 'Marcar visto',
-            ),
-            _buildReportCard(
-              name: 'Otávio',
-              subtitle: 'Relatório · 01 abr - 07 abr · 2026',
-              status: 'Visto',
-              positiveButton: 'Ver relatório',
-              negativeButton: 'Desmarcar visto',
-              statusColor: Colors.teal,
+            ...List.generate(
+              _reports.length,
+              (index) =>
+                  _buildReportCard(report: _reports[index], index: index),
             ),
           ],
         ),
@@ -102,14 +202,11 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     );
   }
 
-  Widget _buildReportCard({
-    required String name,
-    required String subtitle,
-    required String status,
-    required String positiveButton,
-    required String negativeButton,
-    Color statusColor = Colors.redAccent,
-  }) {
+  Widget _buildReportCard({required ReportItem report, required int index}) {
+    final status = report.isSeen ? 'Visto' : 'NOVO';
+    final statusColor = report.isSeen ? Colors.teal : Colors.redAccent;
+    final seenButtonLabel = report.isSeen ? 'Desmarcar visto' : 'Marcar visto';
+
     return Card(
       color: AppColors.white,
       margin: const EdgeInsets.only(bottom: 16),
@@ -131,7 +228,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name,
+                        report.name,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -139,7 +236,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        subtitle,
+                        report.subtitle,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,
@@ -173,18 +270,18 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
               children: [
                 Expanded(
                   child: _buildActionButton(
-                    positiveButton,
+                    'Ver relatorio',
                     AppColors.smallDetail,
                     onPressed: () =>
-                        _showReportDialog(name: name, subtitle: subtitle),
+                        _showReportDialog(report: report, index: index),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildActionButton(
-                    negativeButton,
+                    seenButtonLabel,
                     AppColors.largeDetail,
-                    onPressed: () {},
+                    onPressed: () => _toggleSeen(index),
                   ),
                 ),
               ],
@@ -217,7 +314,9 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     );
   }
 
-  void _showReportDialog({required String name, required String subtitle}) {
+  void _showReportDialog({required ReportItem report, required int index}) {
+    final markLabel = report.isSeen ? 'Desmarcar visto' : 'Marcar visto';
+
     showDialog(
       context: context,
       builder: (context) {
@@ -228,7 +327,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
           ),
           title: Row(
             children: [
-              Expanded(child: Text('Relatório de $name')),
+              Expanded(child: Text('Relatorio de ${report.name}')),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -244,76 +343,109 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8),
-                Text(subtitle, style: const TextStyle(color: Colors.black54)),
+                Text(
+                  report.subtitle,
+                  style: const TextStyle(color: Colors.black54),
+                ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Resumo do Relatório:',
+                  'Distribuição de emoções:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                Container(
-                  height: 200,
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(right: 12),
-                  child: SfCartesianChart(
-                    primaryXAxis: CategoryAxis(
-                      majorGridLines: const MajorGridLines(width: 0),
-                      axisLine: const AxisLine(width: 1, color: Colors.black54),
-                      labelStyle: const TextStyle(
-                        color: Colors.black54,
-                        fontSize: 12,
-                      ),
-                    ),
-
-                    primaryYAxis: NumericAxis(
-                      minimum: 0,
-                      maximum: 35,
-                      interval: 10,
-                      axisLine: const AxisLine(width: 1, color: Colors.black54),
-                      majorGridLines: const MajorGridLines(
-                        width: 0.5,
-                        color: Colors.black12,
-                      ),
-                    ),
-                    series: <CartesianSeries<GraphData, String>>[
-                      BarSeries<GraphData, String>(
-                        dataSource: [
-                          GraphData('Jan', 20),
-                          GraphData('Fev', 30),
-                          GraphData('Mar', 15),
-                          GraphData('Abr', 25),
-                          GraphData('Mai', 10),
-                          GraphData('Jun', 30),
-                        ],
-                        xValueMapper: (GraphData data, _) => data.mes,
-                        yValueMapper: (GraphData data, _) => data.valor,
-                        color: AppColors.smallDetail,
-                        width: 0.6,
-                        borderRadius: BorderRadius.zero,
-
-                        dataLabelSettings: const DataLabelSettings(
-                          isVisible: true,
-                          textStyle: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const SizedBox(height: 8),
+                _buildEmotionDistributionChart(report.emotions),
               ],
             ),
           ),
           actions: [
             ElevatedButton(
               onPressed: () {
+                _toggleSeen(index);
                 Navigator.of(context).pop();
               },
-              child: const Text('Marcar visto'),
+              child: Text(markLabel),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildEmotionDistributionChart(List<EmotionDistribution> emotions) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFEDEEEF),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          ...emotions.map(_buildEmotionRow),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmotionRow(EmotionDistribution emotion) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 34,
+            height: 34,
+            child: Center(
+              child: Icon(emotion.icon, color: Colors.black87, size: 22),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final barWidth =
+                            constraints.maxWidth * (emotion.percent / 100);
+
+                        return Stack(
+                          children: [
+                            Container(height: 14, color: Colors.transparent),
+                            Container(
+                              width: barWidth,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: emotion.color,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 48,
+                  child: Text(
+                    '${emotion.percent}%',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
