@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../data/profissional_repository.dart';
+import '../data/user_repository.dart';
+import '../models/profissional_model.dart';
+import '../models/user_model.dart';
+import 'home_screen.dart';
 import 'register_screen.dart';
+import 'relatorios_profissional.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -50,65 +55,51 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _senhaController.text.trim(),
-      );
-      // Navegar para a tela principal após login
-      // Navigator.of(context).pushReplacement(
-      //   MaterialPageRoute(builder: (_) => const HomeScreen()),
-      // );
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = _mapFirebaseError(e.code);
-      });
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+    await Future<void>.delayed(const Duration(milliseconds: 250));
 
-  String _mapFirebaseError(String code) {
-    switch (code) {
-      case 'user-not-found':
-        return 'Usuário não encontrado.';
-      case 'wrong-password':
-        return 'Senha incorreta.';
-      case 'invalid-email':
-        return 'E-mail inválido.';
-      case 'user-disabled':
-        return 'Conta desativada.';
-      case 'too-many-requests':
-        return 'Muitas tentativas. Tente mais tarde.';
-      default:
-        return 'Erro ao fazer login. Tente novamente.';
-    }
-  }
+    final String email = _emailController.text.trim();
+    final String senha = _senhaController.text.trim();
 
-  Future<void> _esqueceuSenha() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      setState(() => _errorMessage = 'Informe o e-mail para redefinir a senha.');
+    final UserModel? user = UserRepository.login(email, senha);
+    final ProfissionalModel? profissional =
+        ProfissionalRepository.login(email, senha);
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (user == null && profissional == null) {
+      setState(() => _errorMessage = 'E-mail ou senha inválidos.');
       return;
     }
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('E-mail de redefinição enviado!'),
-            backgroundColor: Color(0xFF6A9E96),
-          ),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() => _errorMessage = _mapFirebaseError(e.code));
+
+    if (user != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => HomeScreen(user: user)),
+      );
+      return;
     }
+
+    if (profissional != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => RelatoriosProfissional(profissional: profissional),
+        ),
+      );
+    }
+  }
+
+  void _esqueceuSenha() {
+    setState(() {
+      _errorMessage =
+          'Banco provisório: não há recuperação automática de senha.';
+    });
   }
 
   @override
@@ -120,12 +111,10 @@ class _LoginScreenState extends State<LoginScreen>
           child: Column(
             children: [
               const SizedBox(height: 48),
-
-              // Logo
               Center(
                 child: Container(
-                  width: 100,
-                  height: 100,
+                  width: 150,
+                  height: 150,
                   decoration: BoxDecoration(
                     color: const Color(0xFF6A9E96),
                     borderRadius: BorderRadius.circular(22),
@@ -137,17 +126,16 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.psychology_rounded,
-                    color: Colors.white,
-                    size: 60,
+                  child: Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: Image.asset(
+                      'assets/imagens/logo.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 36),
-
-              // Card com formulário
               FadeTransition(
                 opacity: _fadeAnim,
                 child: SlideTransition(
@@ -171,21 +159,20 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 6),
                           _buildTextField(
                             controller: _emailController,
-                            hint: '',
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Informe o e-mail';
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o e-mail';
+                              }
                               if (!v.contains('@')) return 'E-mail inválido';
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 18),
                           _buildLabel('Senha'),
                           const SizedBox(height: 6),
                           _buildTextField(
                             controller: _senhaController,
-                            hint: '',
                             obscure: _obscureSenha,
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -199,13 +186,13 @@ class _LoginScreenState extends State<LoginScreen>
                                   setState(() => _obscureSenha = !_obscureSenha),
                             ),
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Informe a senha';
+                              if (v == null || v.isEmpty) {
+                                return 'Informe a senha';
+                              }
                               if (v.length < 6) return 'Mínimo 6 caracteres';
                               return null;
                             },
                           ),
-
-                          // Esqueceu a senha
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -225,7 +212,6 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             ),
                           ),
-
                           if (_errorMessage != null) ...[
                             const SizedBox(height: 8),
                             Text(
@@ -236,10 +222,7 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             ),
                           ],
-
                           const SizedBox(height: 20),
-
-                          // Botão Login
                           SizedBox(
                             width: double.infinity,
                             height: 46,
@@ -272,10 +255,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     ),
                             ),
                           ),
-
                           const SizedBox(height: 24),
-
-                          // Criar conta
                           Center(
                             child: RichText(
                               text: TextSpan(
@@ -290,7 +270,8 @@ class _LoginScreenState extends State<LoginScreen>
                                       onTap: () {
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (_) => const RegisterScreen(),
+                                            builder: (_) =>
+                                                const RegisterScreen(),
                                           ),
                                         );
                                       },
@@ -335,7 +316,6 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildTextField({
     required TextEditingController controller,
-    required String hint,
     bool obscure = false,
     TextInputType keyboardType = TextInputType.text,
     Widget? suffixIcon,
@@ -348,7 +328,6 @@ class _LoginScreenState extends State<LoginScreen>
       validator: validator,
       style: const TextStyle(fontSize: 14, color: Color(0xFF2E5F58)),
       decoration: InputDecoration(
-        hintText: hint,
         filled: true,
         fillColor: const Color(0xFFD0E8E8),
         contentPadding:

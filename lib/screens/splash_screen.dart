@@ -65,7 +65,6 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
                 Container(
                   width: 110,
                   height: 110,
@@ -80,14 +79,15 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.psychology_rounded,
-                    color: Colors.white,
-                    size: 68,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Image.asset(
+                      'assets/imagens/logo.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 28),
-                // Texto
                 const Text(
                   'Bem vindo ao mindcare!',
                   style: TextStyle(

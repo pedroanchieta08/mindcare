@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'login_screen.dart';
+import '../data/user_repository.dart';
+import '../models/user_model.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -55,56 +55,43 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   Future<void> _cadastrar() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _senhaController.text.trim(),
-      );
+    await Future<void>.delayed(const Duration(milliseconds: 250));
 
-      // Atualiza o displayName do usuário
-      await credential.user
-          ?.updateDisplayName(_nomeController.text.trim());
+    final String nome = _nomeController.text.trim();
+    final String email = _emailController.text.trim();
+    final String senha = _senhaController.text.trim();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conta criada com sucesso!'),
-            backgroundColor: Color(0xFF6A9E96),
-          ),
-        );
-        // Volta para login após cadastro
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
+    if (UserRepository.emailExists(email)) {
+      if (!mounted) return;
       setState(() {
-        _errorMessage = _mapFirebaseError(e.code);
+        _isLoading = false;
+        _errorMessage = 'Este e-mail já está em uso.';
       });
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      return;
     }
-  }
 
-  String _mapFirebaseError(String code) {
-    switch (code) {
-      case 'email-already-in-use':
-        return 'Este e-mail já está em uso.';
-      case 'invalid-email':
-        return 'E-mail inválido.';
-      case 'weak-password':
-        return 'Senha muito fraca. Use ao menos 6 caracteres.';
-      case 'operation-not-allowed':
-        return 'Cadastro por e-mail desativado.';
-      default:
-        return 'Erro ao cadastrar. Tente novamente.';
-    }
+    UserRepository.register(
+      UserModel(name: nome, email: email, password: senha),
+    );
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Conta criada com sucesso!'),
+        backgroundColor: Color(0xFF6A9E96),
+      ),
+    );
+
+    Navigator.of(context).pop();
   }
 
   @override
@@ -116,8 +103,6 @@ class _RegisterScreenState extends State<RegisterScreen>
           child: Column(
             children: [
               const SizedBox(height: 40),
-
-              // Logo
               Center(
                 child: Container(
                   width: 100,
@@ -133,17 +118,16 @@ class _RegisterScreenState extends State<RegisterScreen>
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.psychology_rounded,
-                    color: Colors.white,
-                    size: 60,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Image.asset(
+                      'assets/imagens/logo.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 32),
-
-              // Card com formulário
               FadeTransition(
                 opacity: _fadeAnim,
                 child: SlideTransition(
@@ -175,7 +159,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 16),
                           _buildLabel('Email'),
                           const SizedBox(height: 6),
@@ -183,12 +166,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Informe o e-mail';
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o e-mail';
+                              }
                               if (!v.contains('@')) return 'E-mail inválido';
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 16),
                           _buildLabel('Senha'),
                           const SizedBox(height: 6),
@@ -207,12 +191,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                                   setState(() => _obscureSenha = !_obscureSenha),
                             ),
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Informe a senha';
+                              if (v == null || v.isEmpty) {
+                                return 'Informe a senha';
+                              }
                               if (v.length < 6) return 'Mínimo 6 caracteres';
                               return null;
                             },
                           ),
-
                           const SizedBox(height: 16),
                           _buildLabel('Confirmar senha'),
                           const SizedBox(height: 6),
@@ -228,7 +213,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 size: 20,
                               ),
                               onPressed: () => setState(
-                                  () => _obscureConfirmar = !_obscureConfirmar),
+                                () => _obscureConfirmar = !_obscureConfirmar,
+                              ),
                             ),
                             validator: (v) {
                               if (v == null || v.isEmpty) {
@@ -240,7 +226,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                               return null;
                             },
                           ),
-
                           if (_errorMessage != null) ...[
                             const SizedBox(height: 10),
                             Text(
@@ -251,10 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                               ),
                             ),
                           ],
-
                           const SizedBox(height: 24),
-
-                          // Botão Cadastrar
                           SizedBox(
                             width: double.infinity,
                             height: 46,
@@ -287,10 +269,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                     ),
                             ),
                           ),
-
                           const SizedBox(height: 20),
-
-                          // Já tem conta
                           Center(
                             child: RichText(
                               text: TextSpan(
