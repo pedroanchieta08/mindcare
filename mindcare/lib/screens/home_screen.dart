@@ -172,7 +172,9 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileScreen(),
+                        ),
                       );
                     },
                   ),
@@ -224,14 +226,12 @@ class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback? onTap; 
   final VoidCallback? onTap;
 
   const _ActionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
-    this.onTap, 
     this.onTap,
   });
 
@@ -242,8 +242,6 @@ class _ActionCard extends StatelessWidget {
       splashColor: onTap == null ? Colors.transparent : null,
       highlightColor: onTap == null ? Colors.transparent : null,
       borderRadius: BorderRadius.circular(18),
-    return GestureDetector(
-      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -274,4 +272,3 @@ class _ActionCard extends StatelessWidget {
     );
   }
 }
-
