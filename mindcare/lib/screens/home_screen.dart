@@ -3,23 +3,28 @@ import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 import 'login_screen.dart';
 import 'perfil_screen.dart';
+import '../widgets/bottombar.dart';
+import 'calendar.dart';
+import 'relatorios_user.dart';
+
+void _logout(BuildContext context) {
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (context) => const LoginScreen()),
+    (route) => false,
+  );
+}
 
 class HomeScreen extends StatelessWidget {
   final UserModel user;
 
   const HomeScreen({super.key, required this.user});
 
-  void _logout(BuildContext context) {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
+
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
@@ -54,7 +59,10 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.text,
                     ),
                   ),
-                  Text(user.email, style: const TextStyle(color: AppColors.text)),
+                  Text(
+                    user.email,
+                    style: const TextStyle(color: AppColors.text),
+                  ),
                 ],
               ),
             ),
@@ -102,7 +110,9 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
+
             const Text(
               'Ações rápidas',
               style: TextStyle(
@@ -111,18 +121,28 @@ class HomeScreen extends StatelessWidget {
                 color: AppColors.text,
               ),
             ),
+
             const SizedBox(height: 14),
+
             Row(
-              children: const [
+              children: [
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.document_scanner,
                     title: 'Relatório',
                     subtitle: 'Consultar relatórios',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RelatoriosUser(user: user),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                SizedBox(width: 12),
-                Expanded(
+                const SizedBox(width: 12),
+                const Expanded(
                   child: _ActionCard(
                     icon: Icons.notifications,
                     title: 'Notificações',
@@ -131,14 +151,16 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
+
             Row(
               children: [
                 const Expanded(
                   child: _ActionCard(
                     icon: Icons.calendar_month,
-                    title: 'Calendario',
-                    subtitle: 'Calendario de emoções',
+                    title: 'Calendário',
+                    subtitle: 'Calendário de emoções',
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -157,8 +179,42 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+
+            const SizedBox(height: 100),
           ],
         ),
+      ),
+
+      bottomNavigationBar: BottomBar(
+        currentIndex: -1,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          } else if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CalendarPage(user: user)),
+            );
+          } else if (index == 4) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          }
+        },
       ),
     );
   }
@@ -169,12 +225,14 @@ class _ActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap; 
+  final VoidCallback? onTap;
 
   const _ActionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     this.onTap, 
+    this.onTap,
   });
 
   @override
@@ -184,6 +242,8 @@ class _ActionCard extends StatelessWidget {
       splashColor: onTap == null ? Colors.transparent : null,
       highlightColor: onTap == null ? Colors.transparent : null,
       borderRadius: BorderRadius.circular(18),
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

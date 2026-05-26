@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mindcare/screens/calendar.dart';
+import 'package:mindcare/screens/sentimental.dart';
 import 'constants/app_colors.dart';
 import 'screens/login_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await initializeDateFormatting('pt_BR', null);
+
   runApp(const MindCareApp());
 }
 
