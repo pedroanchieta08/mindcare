@@ -85,6 +85,15 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Scaffold(
       backgroundColor: _backgroundColor,
+      appBar: AppBar(
+        backgroundColor: _curveColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.blueGrey),
+          tooltip: 'Voltar',
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 110),
@@ -92,12 +101,12 @@ class _CalendarPageState extends State<CalendarPage> {
             constraints: BoxConstraints(minHeight: size.height),
             child: Stack(
               children: [
-                _CurvedBackground(height: size.height * 0.78),
+                _CurvedBackground(height: size.height * 0.62),
 
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 24),
+                    padding: const EdgeInsets.only(top: 0),
                     child: _CalendarCard(
                       width: size.width * 0.92,
                       focusedMonth: _focusedMonth,
@@ -185,7 +194,7 @@ class _CalendarCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 4),
           TableCalendar(
             locale: 'pt_BR',
             firstDay: _calendarFirstDay,
