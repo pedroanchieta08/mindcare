@@ -6,6 +6,14 @@ import '../widgets/bottombar.dart';
 import 'calendar.dart';
 import 'relatorios_user.dart';
 
+void _logout(BuildContext context) {
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (context) => const LoginScreen()),
+    (route) => false,
+  );
+}
+
 class HomeScreen extends StatelessWidget {
   final UserModel user;
 
