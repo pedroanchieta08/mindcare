@@ -176,7 +176,6 @@ class MainNavigationScreen extends StatelessWidget {
   }
 }
 
-
 class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
