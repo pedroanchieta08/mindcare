@@ -5,72 +5,116 @@ import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 import 'package:mindcare/widgets/bottombar.dart';
 import 'calendar.dart';
+import 'relatorios_user.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserModel user;
 
   const HomeScreen({super.key, required this.user});
 
+  void _logout(BuildContext context) {
+    // Close the drawer and navigate back (adjust as needed for real logout flow)
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-
+      drawer: Drawer(
+        backgroundColor: AppColors.background,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: AppColors.largeDetail),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: AppColors.smallDetail,
+                    child: Icon(Icons.person, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    user.name,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  Text(
+                    user.email,
+                    style: const TextStyle(color: AppColors.text),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home, color: AppColors.smallDetail),
+              title: const Text('Início'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: AppColors.smallDetail),
+              title: const Text('Sair'),
+              onTap: () => _logout(context),
+            ),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned(
-              top: -60,
-              left: -80,
-              right: -80,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.55,
-                child: Stack(
-                  children: [
-                    Transform.scale(
-                      scaleX: 1.4,
-                      scaleY: 1.43,
-                      child: Image.asset(
-                        'assets/imagens/fundo.png',
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.fill,
-                      ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.55,
+              child: Stack(
+                children: [
+                  Transform.scale(
+                    scaleX: 1.4,
+                    scaleY: 1.43,
+                    child: Image.asset(
+                      'assets/imagens/fundo.png',
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.fill,
                     ),
-                    Positioned(
-                      top: 150,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SentimentalPage(),
-                              ),
-                            );
-                          },
-                          child: CircleAvatar(
-                            radius: 120,
-                            backgroundColor: AppColors.minimum,
-                            child: Icon(
-                              Icons.person,
-                              size: 120,
-                              color: Colors.white,
+                  ),
+                  Positioned(
+                    top: 150,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SentimentalPage(),
                             ),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 120,
+                          backgroundColor: AppColors.minimum,
+                          child: Icon(
+                            Icons.person,
+                            size: 120,
+                            color: Colors.white,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(top: 120),
+              margin: const EdgeInsets.only(top: 20),
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -107,9 +151,6 @@ class HomeScreen extends StatelessWidget {
                 color: AppColors.text,
               ),
             ),
-
-            const SizedBox(height: 14),
-
             Container(
               margin: const EdgeInsets.only(bottom: 20),
               width: double.infinity,
@@ -122,13 +163,14 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Como atividades fícas melhoram a saúde mental.',
+                    'A importância das atividades físicas para a...',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppColors.text,
                     ),
                   ),
+                  const SizedBox(height: 1),
                 ],
               ),
             ),
@@ -151,22 +193,22 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.text,
                     ),
                   ),
+                  const SizedBox(height: 1),
                 ],
               ),
             ),
-
-            const SizedBox(height: 100),
           ],
         ),
       ),
-
       bottomNavigationBar: BottomBar(
         currentIndex: -1,
         onTap: (index) {
           if (index == 0) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+              MaterialPageRoute(
+                builder: (context) => RelatoriosUser(user: user),
+              ),
             );
           } else if (index == 1) {
             Navigator.push(
@@ -192,49 +234,6 @@ class HomeScreen extends StatelessWidget {
             );
           }
         },
-      ),
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _ActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.largeDetail),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 34, color: AppColors.smallDetail),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 12, color: AppColors.text),
-          ),
-        ],
       ),
     );
   }
