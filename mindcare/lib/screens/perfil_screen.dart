@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mindcare/constants/app_colors.dart';
 import 'package:mindcare/models/user_model.dart';
-import 'home_screen.dart';
 import 'package:mindcare/widgets/bottombar.dart';
 
 class ProfileItem {

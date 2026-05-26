@@ -72,7 +72,7 @@ class _BottomBarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color itemColor = isSelected
         ? AppColors.smallDetail
-        : AppColors.text.withOpacity(0.55);
+        : AppColors.text.withValues(alpha: 0.55);
 
     return InkWell(
       onTap: onTap,
@@ -113,7 +113,7 @@ class _EmergencyBottomBarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color itemColor = isSelected
         ? AppColors.smallDetail
-        : AppColors.text.withOpacity(0.55);
+        : AppColors.text.withValues(alpha: 0.55);
 
     return InkWell(
       onTap: onTap,
@@ -131,7 +131,7 @@ class _EmergencyBottomBarItem extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.smallDetail.withOpacity(0.35),
+                    color: AppColors.smallDetail.withValues(alpha: 0.35),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),

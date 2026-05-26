@@ -31,15 +31,15 @@ class _SentimentalPageState extends State<SentimentalPage> {
 
   void _registrar() {
     if (_humorSelect == null) {
-      _Snackbar('Selecione um sentimento');
+      _snackbar('Selecione um sentimento');
       return;
     }
 
     SentimentStore().save(DateTime.now(), _humorSelect!.emoji);
-    _Snackbar('Sentimento registrado no calendário');
+    _snackbar('Sentimento registrado no calendário');
   }
 
-  void _Snackbar(String mensagem) {
+  void _snackbar(String mensagem) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(mensagem)));

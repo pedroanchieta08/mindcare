@@ -114,7 +114,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(top: 20),
+              margin: const EdgeInsets.only(top: 140),
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(

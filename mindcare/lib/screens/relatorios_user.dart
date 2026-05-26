@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/user_model.dart';
-import 'login_screen.dart';
 
 class RelatoriosUser extends StatefulWidget {
   final UserModel user;
@@ -22,14 +21,6 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
   ];
 
   int touchedIndex = -1;
-
-  void _logout() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
