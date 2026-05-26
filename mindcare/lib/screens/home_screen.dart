@@ -6,6 +6,7 @@ import 'perfil_screen.dart';
 import '../widgets/bottombar.dart';
 import 'calendar.dart';
 import 'relatorios_user.dart';
+import 'sentimental.dart';
 
 void _logout(BuildContext context) {
   Navigator.pushAndRemoveUntil(
@@ -13,6 +14,35 @@ void _logout(BuildContext context) {
     MaterialPageRoute(builder: (context) => const LoginScreen()),
     (route) => false,
   );
+}
+
+void _handleBottomBarNavigation(
+  BuildContext context,
+  UserModel user,
+  int index,
+) {
+  Widget? destination;
+
+  switch (index) {
+    case 0:
+      destination = RelatoriosUser(user: user);
+      break;
+    case 2:
+      destination = const SentimentalPage();
+      break;
+    case 3:
+      destination = CalendarPage(user: user);
+      break;
+    case 4:
+      destination = const ProfileScreen();
+      break;
+  }
+
+  if (destination == null) {
+    return;
+  }
+
+  Navigator.push(context, MaterialPageRoute(builder: (_) => destination!));
 }
 
 class HomeScreen extends StatelessWidget {
@@ -190,32 +220,7 @@ class HomeScreen extends StatelessWidget {
       bottomNavigationBar: BottomBar(
         currentIndex: -1,
         onTap: (index) {
-          if (index == 0) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
-            );
-          } else if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
-            );
-          } else if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
-            );
-          } else if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CalendarPage(user: user)),
-            );
-          } else if (index == 4) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
-            );
-          }
+          _handleBottomBarNavigation(context, user, index);
         },
       ),
     );

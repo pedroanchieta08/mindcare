@@ -1,11 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'sentiment_store.dart';
 import '../data/sentiment_store.dart';
-import '../constants/app_colors.dart';
 import 'package:mindcare/models/user_model.dart';
-import 'home_screen.dart';
 import '../widgets/bottombar.dart';
+import 'perfil_screen.dart';
+import 'relatorios_user.dart';
+import 'sentimental.dart';
+
+void _handleBottomBarNavigation(
+  BuildContext context,
+  UserModel user,
+  int index,
+) {
+  Widget? destination;
+
+  switch (index) {
+    case 0:
+      destination = RelatoriosUser(user: user);
+      break;
+    case 2:
+      destination = const SentimentalPage();
+      break;
+    case 4:
+      destination = const ProfileScreen();
+      break;
+  }
+
+  if (destination == null) {
+    return;
+  }
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => destination!),
+  );
+}
 
 const _backgroundColor = Color(0xFFDEF0F3);
 const _curveColor = Color(0xFFB2DDE2);
@@ -15,7 +44,6 @@ final _calendarFirstDay = DateTime.utc(2020, 1, 1);
 final _calendarLastDay = DateTime.utc(2030, 12, 31);
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
   final UserModel user;
 
   const CalendarPage({super.key, required this.user});
@@ -57,23 +85,6 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Scaffold(
       backgroundColor: _backgroundColor,
-      body: Stack(
-        children: [
-          _CurvedBackground(height: size.height * 0.78),
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 24),
-              child: _CalendarCard(
-                width: size.width * 0.92,
-                focusedMonth: _focusedMonth,
-                selectedDay: _selectedDay,
-                onDaySelected: _onDaySelected,
-                onPageChanged: (focused) => _focusedMonth = focused,
-              ),
-            ),
-          ),
-        ],
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 110),
@@ -108,9 +119,11 @@ class _CalendarPageState extends State<CalendarPage> {
       bottomNavigationBar: BottomBar(
         currentIndex: 3,
         onTap: (index) {
-          if (index == 3) return;
+          if (index == 3) {
+            return;
+          }
 
-          Navigator.pop(context);
+          _handleBottomBarNavigation(context, widget.user, index);
         },
       ),
     );
@@ -199,5 +212,4 @@ class _CalendarCard extends StatelessWidget {
       ),
     );
   }
-}
 }

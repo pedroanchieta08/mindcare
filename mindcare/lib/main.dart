@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mindcare/screens/calendar.dart';
-import 'package:mindcare/screens/sentimental.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'constants/app_colors.dart';
 import 'screens/login_screen.dart';
-import 'screens/sentimental.dart';
-import 'screens/calendar.dart';
-import 'package:intl/date_symbol_data_local.dart';
-
-void main() {
-  initializeDateFormatting('pt_BR');
-import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,7 +39,7 @@ class MindCareApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const SentimentalPage(),
+      home: const LoginScreen(),
     );
   }
 }
