@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/sentiment_store.dart';
+import 'package:mindcare/widgets/bottombar.dart';
+import 'package:mindcare/constants/app_colors.dart';
 
 typedef _OpcaoHumor = ({String emoji, String label});
 
@@ -49,6 +51,14 @@ class _SentimentalPageState extends State<SentimentalPage> {
 
     return Scaffold(
       backgroundColor: _backgroundColor,
+      appBar: AppBar(
+        backgroundColor: AppColors.largeDetail,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.smallDetail),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Stack(
         children: [
           _CurvedBackground(height: size.height * 0.78),
@@ -76,6 +86,14 @@ class _SentimentalPageState extends State<SentimentalPage> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomBar(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) return;
+
+          Navigator.pop(context);
+        },
       ),
     );
   }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mindcare/screens/perfil_screen.dart';
+import 'package:mindcare/screens/sentimental.dart';
 import '../constants/app_colors.dart';
 import '../models/user_model.dart';
-import 'login_screen.dart';
-import '../widgets/bottombar.dart';
+import 'package:mindcare/widgets/bottombar.dart';
 import 'calendar.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -20,7 +21,56 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Positioned(
+              top: -60,
+              left: -80,
+              right: -80,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.55,
+                child: Stack(
+                  children: [
+                    Transform.scale(
+                      scaleX: 1.4,
+                      scaleY: 1.43,
+                      child: Image.asset(
+                        'assets/imagens/fundo.png',
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                    Positioned(
+                      top: 150,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SentimentalPage(),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            radius: 120,
+                            backgroundColor: AppColors.minimum,
+                            child: Icon(
+                              Icons.person,
+                              size: 120,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Container(
+              margin: const EdgeInsets.only(top: 120),
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -31,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Olá, ${user.name}!',
+                    'Você ja conhece a CNN?',
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -40,7 +90,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Como você está se sentindo hoje?',
+                    'A CNN é um canal voltado para o sup...',
                     style: TextStyle(fontSize: 16, color: AppColors.text),
                   ),
                 ],
@@ -50,7 +100,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             const Text(
-              'Ações rápidas',
+              'Notícias',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -60,46 +110,49 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            Row(
-              children: const [
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.document_scanner,
-                    title: 'Relatório',
-                    subtitle: 'Consultar relatórios',
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              width: double.infinity,
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: AppColors.largeDetail,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Como atividades fícas melhoram a saúde mental.',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
                   ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.notifications,
-                    title: 'Notificações',
-                    subtitle: 'Configurações de notificação',
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: const [
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.calendar_month,
-                    title: 'Calendário',
-                    subtitle: 'Calendário de emoções',
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              width: double.infinity,
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: AppColors.largeDetail,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pensamentos verdes.',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
                   ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.person,
-                    title: 'Menu',
-                    subtitle: 'Menu de configurações',
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             const SizedBox(height: 100),
@@ -133,7 +186,9 @@ class HomeScreen extends StatelessWidget {
           } else if (index == 4) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+              MaterialPageRoute(
+                builder: (context) => ProfileScreen(user: user),
+              ),
             );
           }
         },

@@ -3,12 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../data/sentiment_store.dart';
 import '../constants/app_colors.dart';
 import 'package:mindcare/models/user_model.dart';
-import 'home_screen.dart';
-import '../widgets/bottombar.dart';
-
-const _backgroundColor = Color(0xFFDEF0F3);
-const _curveColor = Color(0xFFB2DDE2);
-const _cardColor = Color(0xFFB8A9E0);
+import 'package:mindcare/widgets/bottombar.dart';
 
 final _calendarFirstDay = DateTime.utc(2020, 1, 1);
 final _calendarLastDay = DateTime.utc(2030, 12, 31);
@@ -54,7 +49,15 @@ class _CalendarPageState extends State<CalendarPage> {
     final size = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.largeDetail,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.smallDetail),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 110),
@@ -62,12 +65,12 @@ class _CalendarPageState extends State<CalendarPage> {
             constraints: BoxConstraints(minHeight: size.height),
             child: Stack(
               children: [
-                _CurvedBackground(height: size.height * 0.78),
+                _CurvedBackground(height: size.height * 0.68),
 
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 24),
+                    padding: const EdgeInsets.only(top: 0),
                     child: _CalendarCard(
                       width: size.width * 0.92,
                       focusedMonth: _focusedMonth,
@@ -109,7 +112,7 @@ class _CurvedBackground extends StatelessWidget {
       width: double.infinity,
       height: height,
       decoration: const BoxDecoration(
-        color: _curveColor,
+        color: AppColors.largeDetail,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(90),
           bottomRight: Radius.circular(90),
@@ -140,7 +143,7 @@ class _CalendarCard extends StatelessWidget {
       width: width,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _cardColor,
+        color: AppColors.destaque,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
