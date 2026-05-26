@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 import 'login_screen.dart';
+import '../widgets/bottombar.dart';
+import 'calendar.dart';
 import 'relatorios_user.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -9,17 +11,11 @@ class HomeScreen extends StatelessWidget {
 
   const HomeScreen({super.key, required this.user});
 
-  void _logout(BuildContext context) {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
+
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
@@ -105,7 +101,9 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
+
             const Text(
               'Ações rápidas',
               style: TextStyle(
@@ -114,7 +112,9 @@ class HomeScreen extends StatelessWidget {
                 color: AppColors.text,
               ),
             ),
+
             const SizedBox(height: 14),
+
             Row(
               children: [
                 Expanded(
@@ -142,14 +142,16 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
+
             Row(
               children: const [
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.calendar_month,
-                    title: 'Calendario',
-                    subtitle: 'Calendario de emoções',
+                    title: 'Calendário',
+                    subtitle: 'Calendário de emoções',
                   ),
                 ),
                 SizedBox(width: 12),
@@ -162,8 +164,42 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+
+            const SizedBox(height: 100),
           ],
         ),
+      ),
+
+      bottomNavigationBar: BottomBar(
+        currentIndex: -1,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          } else if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CalendarPage(user: user)),
+            );
+          } else if (index == 4) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+            );
+          }
+        },
       ),
     );
   }
