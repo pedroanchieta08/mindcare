@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_screen.dart';
 
 class ProfileItem {
   final IconData icon;
@@ -15,16 +16,40 @@ class ProfileItem {
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  void _logout(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<ProfileItem> accountItems = [
-      ProfileItem(icon: Icons.person_outline, title: 'Dados pessoais', subtitle: 'Nome, email, foto'),
-      ProfileItem(icon: Icons.lock_outline, title: 'Segurança', subtitle: 'Senha e autenticação'),
-      ProfileItem(icon: Icons.shield_outlined, title: 'Privacidade', subtitle: 'Controle de dados'),
+      ProfileItem(
+        icon: Icons.person_outline,
+        title: 'Dados pessoais',
+        subtitle: 'Nome, email, foto',
+      ),
+      ProfileItem(
+        icon: Icons.lock_outline,
+        title: 'Segurança',
+        subtitle: 'Senha e autenticação',
+      ),
+      ProfileItem(
+        icon: Icons.shield_outlined,
+        title: 'Privacidade',
+        subtitle: 'Controle de dados',
+      ),
     ];
 
     final List<ProfileItem> appItems = [
-      ProfileItem(icon: Icons.notifications_none, title: 'Notificações', subtitle: 'Lembretes e frases diárias'),
+      ProfileItem(
+        icon: Icons.notifications_none,
+        title: 'Notificações',
+        subtitle: 'Lembretes e frases diárias',
+      ),
     ];
 
     return Scaffold(
@@ -36,6 +61,13 @@ class ProfileScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.blueGrey),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.blueGrey),
+            tooltip: 'Sair',
+            onPressed: () => _logout(context),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -48,7 +80,11 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 12),
             const Text(
               'Usuário Teste',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey,
+              ),
             ),
             const Text(
               'Usuário desde abr/2026',
@@ -83,7 +119,10 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         children: [
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
         ],
       ),
     );
@@ -97,7 +136,10 @@ class ProfileScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
           ),
           const SizedBox(height: 8),
           ListView.builder(
@@ -114,9 +156,18 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 child: ListTile(
                   leading: Icon(item.icon, color: Colors.blueGrey),
-                  title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(item.subtitle, style: const TextStyle(fontSize: 12)),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.blueGrey),
+                  title: Text(
+                    item.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    item.subtitle,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.blueGrey,
+                  ),
                   onTap: () {},
                 ),
               );
