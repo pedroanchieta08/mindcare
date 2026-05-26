@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 import 'login_screen.dart';
+import 'perfil_screen.dart';
 import '../widgets/bottombar.dart';
 import 'calendar.dart';
 import 'relatorios_user.dart';
@@ -154,20 +155,26 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             Row(
-              children: const [
-                Expanded(
+              children: [
+                const Expanded(
                   child: _ActionCard(
                     icon: Icons.calendar_month,
                     title: 'Calendário',
                     subtitle: 'Calendário de emoções',
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.person,
                     title: 'Menu',
                     subtitle: 'Menu de configurações',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -217,17 +224,24 @@ class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap; 
   final VoidCallback? onTap;
 
   const _ActionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap, 
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      splashColor: onTap == null ? Colors.transparent : null,
+      highlightColor: onTap == null ? Colors.transparent : null,
+      borderRadius: BorderRadius.circular(18),
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -260,3 +274,4 @@ class _ActionCard extends StatelessWidget {
     );
   }
 }
+
