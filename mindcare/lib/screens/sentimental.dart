@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'sentiment_store.dart';
+import '../data/sentiment_store.dart';
 
 typedef _OpcaoHumor = ({String emoji, String label});
 
@@ -13,6 +14,7 @@ const List<_OpcaoHumor> _opcoesHumor = [
 
 const _backgroundColor = Color(0xFFDEF0F3);
 const _curveColor= Color(0xFFB2DDE2);
+const _curveColor = Color(0xFFB2DDE2);
 const _circleColor = Color(0xFF0E550F);
 const _buttonColor = Color(0xFF5F8B7B);
 const _activeColor = Color(0xFFDDE5FF);

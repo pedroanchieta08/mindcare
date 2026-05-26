@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'sentiment_store.dart';
+import '../data/sentiment_store.dart';
+import '../constants/app_colors.dart';
+import 'package:mindcare/models/user_model.dart';
+import 'home_screen.dart';
+import '../widgets/bottombar.dart';
 
 const _backgroundColor = Color(0xFFDEF0F3);
 const _curveColor = Color(0xFFB2DDE2);
@@ -11,6 +16,9 @@ final _calendarLastDay = DateTime.utc(2030, 12, 31);
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
+  final UserModel user;
+
+  const CalendarPage({super.key, required this.user});
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
@@ -66,6 +74,44 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
         ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 110),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: size.height),
+            child: Stack(
+              children: [
+                _CurvedBackground(height: size.height * 0.78),
+
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 24),
+                    child: _CalendarCard(
+                      width: size.width * 0.92,
+                      focusedMonth: _focusedMonth,
+                      selectedDay: _selectedDay,
+                      onDaySelected: _onDaySelected,
+                      onPageChanged: (focused) {
+                        setState(() {
+                          _focusedMonth = focused;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomBar(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) return;
+
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -153,4 +199,5 @@ class _CalendarCard extends StatelessWidget {
       ),
     );
   }
+}
 }
