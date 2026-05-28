@@ -36,8 +36,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               Navigator.pop(context);
                             },
                             icon: const Icon(
-                              Icons.arrow_back_ios,
-                              color: Color(0xFF8A9A9E),
+                              Icons.arrow_back,
+                              color: Colors.blueGrey,
                             ),
                           ),
                         ],
@@ -87,10 +87,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              '❤️',
-                              style: TextStyle(fontSize: 28),
-                            ),
+                            const Text('❤️', style: TextStyle(fontSize: 28)),
                             const SizedBox(width: 14),
                             Expanded(
                               child: Text(
@@ -191,52 +188,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ),
               ),
             ),
-
-            Container(
-              height: 90,
-              decoration: const BoxDecoration(
-                color: Color(0xFFA5C5BD),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(28),
-                  topRight: Radius.circular(28),
-                ),
-              ),
-              child: Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  Positioned(
-                    top: -28,
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF7268D8),
-                      ),
-                      child: const Icon(
-                        Icons.notifications_none,
-                        color: Colors.white,
-                        size: 42,
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 26),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        _BottomIcon(icon: Icons.description_outlined),
-                        _BottomIcon(icon: Icons.notifications_none),
-                        SizedBox(width: 60),
-                        _BottomIcon(icon: Icons.calendar_today_outlined),
-                        _BottomIcon(icon: Icons.person_outline),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -265,10 +216,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
-              child: Text(
-                icon,
-                style: const TextStyle(fontSize: 26),
-              ),
+              child: Text(icon, style: const TextStyle(fontSize: 26)),
             ),
           ),
           const SizedBox(width: 14),
@@ -278,18 +226,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   message,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.4,
-                  ),
+                  style: const TextStyle(fontSize: 16, height: 1.4),
                 ),
               ],
             ),
@@ -307,20 +249,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
     required ValueChanged<bool> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 18,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
         color: const Color(0xFFAED5DB),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 30),
-          ),
+          Text(emoji, style: const TextStyle(fontSize: 30)),
           const SizedBox(width: 14),
 
           Expanded(
@@ -337,10 +273,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -374,11 +307,7 @@ class _BottomIcon extends StatelessWidget {
         shape: BoxShape.circle,
         color: Color(0xFF7EA196),
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 22,
-      ),
+      child: Icon(icon, color: Colors.white, size: 22),
     );
   }
 }

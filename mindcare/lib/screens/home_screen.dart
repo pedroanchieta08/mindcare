@@ -197,30 +197,6 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.smallDetail,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                icon: const Icon(Icons.notifications_none),
-                label: const Text('Notificações'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -237,7 +213,9 @@ class HomeScreen extends StatelessWidget {
           } else if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const NotificationScreen()),
+              MaterialPageRoute(
+                builder: (context) => const NotificationScreen(),
+              ),
             );
           } else if (index == 2) {
             Navigator.push(

@@ -187,8 +187,8 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
             child: IconButton(
               onPressed: () => Navigator.of(context).maybePop(),
               icon: Icon(
-                Icons.arrow_back_ios_new,
-                color: AppColors.smallDetail,
+                Icons.arrow_back,
+                color: Colors.blueGrey,
                 size: isWide ? 32 : 24,
               ),
             ),

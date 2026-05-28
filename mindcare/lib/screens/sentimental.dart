@@ -93,7 +93,7 @@ class _BotaoVoltar extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onPressed,
-      icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+      icon: const Icon(Icons.arrow_back, color: Colors.black87),
     );
   }
 }
