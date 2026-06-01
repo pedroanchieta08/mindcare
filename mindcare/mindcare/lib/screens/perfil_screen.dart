@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mindcare/constants/app_colors.dart';
-import 'package:mindcare/models/user_model.dart';
 import 'package:mindcare/widgets/bottombar.dart';
+import '../models/app_user.dart';
 
 class ProfileItem {
   final IconData icon;
@@ -16,7 +16,7 @@ class ProfileItem {
 }
 
 class ProfileScreen extends StatelessWidget {
-  final UserModel user;
+  final AppUser user;
 
   const ProfileScreen({super.key, required this.user});
 

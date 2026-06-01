@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mindcare/screens/perfil_screen.dart';
 import 'package:mindcare/screens/sentimental.dart';
+import 'package:mindcare/screens/notification_screen.dart';
 import '../constants/app_colors.dart';
-import '../models/user_model.dart';
 import 'package:mindcare/widgets/bottombar.dart';
 import 'calendar.dart';
 import 'relatorios_user.dart';
+import '../models/app_user.dart';
 
 class HomeScreen extends StatelessWidget {
-  final UserModel user;
+  final AppUser user;
 
   const HomeScreen({super.key, required this.user});
-
-  void _logout(BuildContext context) {
-    // Close the drawer and navigate back (adjust as needed for real logout flow)
-    Navigator.pop(context);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,18 +33,6 @@ class HomeScreen extends StatelessWidget {
                     child: Icon(Icons.person, color: Colors.white),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    user.name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  Text(
-                    user.email,
-                    style: const TextStyle(color: AppColors.text),
-                  ),
                 ],
               ),
             ),
@@ -56,11 +40,6 @@ class HomeScreen extends StatelessWidget {
               leading: const Icon(Icons.home, color: AppColors.smallDetail),
               title: const Text('Início'),
               onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: AppColors.smallDetail),
-              title: const Text('Sair'),
-              onTap: () => _logout(context),
             ),
           ],
         ),
@@ -218,7 +197,9 @@ class HomeScreen extends StatelessWidget {
           } else if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+              MaterialPageRoute(
+                builder: (context) => NotificationScreen(user: user),
+              ),
             );
           } else if (index == 3) {
             Navigator.push(

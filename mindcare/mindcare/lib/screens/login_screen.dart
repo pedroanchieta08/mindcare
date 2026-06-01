@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../data/user_repository.dart';
-import '../models/user_model.dart';
 import '../widgets/custom_text_field.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 import 'relatorios_profissional.dart';
-import '../data/profissional_repository.dart';
-import '../models/profissional_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
+import '../services/user_service.dart';
+import '../models/app_user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,36 +19,63 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
 
-  void _login() {
-    final String email = _emailController.text.trim();
-    final String password = _passwordController.text.trim();
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-    final UserModel? user = UserRepository.login(email, password);
-    final ProfissionalModel? profissional = ProfissionalRepository.login(
-      email,
-      password,
-    );
-
-    if (user == null && profissional == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('E-mail ou senha inválidos.')),
-      );
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha e-mail e senha.')));
       return;
     }
 
-    if (user != null) {
+    try {
+      final credential = await _authService.login(
+        email: email,
+        password: password,
+      );
+
+      final firebaseUser = credential.user;
+
+      if (firebaseUser == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Erro ao entrar.')));
+        return;
+      }
+
+      final appUser = await _userService.getUserById(firebaseUser.uid);
+
+      if (appUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dados do usuário não encontrados.')),
+        );
+        return;
+      }
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeScreen(user: user)),
+        MaterialPageRoute(builder: (context) => HomeScreen(user: appUser)),
       );
-    } else if (profissional != null) {
-      Navigator.pushReplacement(
+    } on FirebaseAuthException catch (e) {
+      String message = 'Erro ao entrar.';
+
+      if (e.code == 'invalid-credential') {
+        message = 'E-mail ou senha incálidos.';
+      } else if (e.code == 'user-not-found') {
+        message = 'Usuário não encontrado.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Senha incorreta.';
+      } else if (e.code == 'invalid-email') {
+        message = 'E-mail incálido.';
+      }
+      ScaffoldMessenger.of(
         context,
-        MaterialPageRoute(
-          builder: (_) => RelatoriosProfissional(profissional: profissional),
-        ),
-      );
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 

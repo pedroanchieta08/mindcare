@@ -1,10 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../models/user_model.dart';
+import '../models/app_user.dart';
 
 class RelatoriosUser extends StatefulWidget {
-  final UserModel user;
+  final AppUser user;
 
   const RelatoriosUser({super.key, required this.user});
 

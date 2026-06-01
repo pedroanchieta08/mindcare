@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../data/sentiment_store.dart';
 import '../constants/app_colors.dart';
-import 'package:mindcare/models/user_model.dart';
 import 'package:mindcare/widgets/bottombar.dart';
+import '../models/app_user.dart';
 
 final _calendarFirstDay = DateTime.utc(2020, 1, 1);
 final _calendarLastDay = DateTime.utc(2030, 12, 31);
 
 class CalendarPage extends StatefulWidget {
-  final UserModel user;
+  final AppUser user;
 
   const CalendarPage({super.key, required this.user});
 
