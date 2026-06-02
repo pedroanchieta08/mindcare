@@ -7,11 +7,16 @@ import 'package:mindcare/widgets/bottombar.dart';
 import 'calendar.dart';
 import 'relatorios_user.dart';
 import '../models/app_user.dart';
+import '../models/pubmed_artigo.dart';
+import '../services/pubmed_service.dart';
+import '../widgets/pubmed_card.dart';
 
 class HomeScreen extends StatelessWidget {
   final AppUser user;
 
-  const HomeScreen({super.key, required this.user});
+  HomeScreen({super.key, required this.user});
+
+  final PubMedService _pubMedService = PubMedService();
 
   @override
   Widget build(BuildContext context) {
@@ -123,59 +128,63 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             const Text(
-              'Notícias',
+              'Estudos sobre saúde mental',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: AppColors.text,
               ),
             ),
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.largeDetail,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'A importância das atividades físicas para a...',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+            const SizedBox(height: 12),
+
+            FutureBuilder<List<PubMedArtigo>>(
+              future: _pubMedService.fetchMentalHealthArticles(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.largeDetail,
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                  ),
-                  const SizedBox(height: 1),
-                ],
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.largeDetail,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pensamentos verdes.',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                    child: const Text(
+                      'Não foi possível carregar os estudos agora.',
+                      style: TextStyle(color: AppColors.text),
                     ),
-                  ),
-                  const SizedBox(height: 1),
-                ],
-              ),
+                  );
+                }
+
+                final artigos = snapshot.data ?? [];
+
+                if (artigos.isEmpty) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.largeDetail,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Text(
+                      'Nenhum estudo encontrado.',
+                      style: TextStyle(color: AppColors.text),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: artigos
+                      .map((artigo) => PubMedArtigoCard(artigo: artigo))
+                      .toList(),
+                );
+              },
             ),
+
+            const SizedBox(height: 100),
           ],
         ),
       ),
