@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mindcare/screens/home_screen.dart';
 import '../data/sentiment_store.dart';
+import '../models/app_user.dart';
+import 'calendar.dart';
 import 'package:mindcare/widgets/bottombar.dart';
 import 'package:mindcare/constants/app_colors.dart';
 
@@ -20,7 +23,9 @@ const _buttonColor = Color(0xFF5F8B7B);
 const _activeColor = Color(0xFFDDE5FF);
 
 class SentimentalPage extends StatefulWidget {
-  const SentimentalPage({super.key});
+  final AppUser user;
+
+  const SentimentalPage({super.key, required this.user});
 
   @override
   State<SentimentalPage> createState() => _SentimentalPageState();
@@ -37,6 +42,11 @@ class _SentimentalPageState extends State<SentimentalPage> {
 
     SentimentStore().save(DateTime.now(), _humorSelect!.emoji);
     _snackbar('Sentimento registrado no calendário');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen(user: widget.user)),
+    );
   }
 
   void _snackbar(String mensagem) {

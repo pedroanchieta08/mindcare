@@ -22,33 +22,6 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      drawer: Drawer(
-        backgroundColor: AppColors.background,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: AppColors.largeDetail),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const CircleAvatar(
-                    backgroundColor: AppColors.smallDetail,
-                    child: Icon(Icons.person, color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home, color: AppColors.smallDetail),
-              title: const Text('Início'),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -61,6 +34,7 @@ class HomeScreen extends StatelessWidget {
                   Transform.scale(
                     scaleX: 1.4,
                     scaleY: 1.43,
+                    alignment: Alignment(0, 1.5),
                     child: Image.asset(
                       'assets/imagens/fundo.png',
                       width: double.infinity,
@@ -69,7 +43,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    top: 150,
+                    top: 90,
                     left: 0,
                     right: 0,
                     child: Center(
@@ -78,7 +52,7 @@ class HomeScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SentimentalPage(),
+                              builder: (context) => SentimentalPage(user: user),
                             ),
                           );
                         },
@@ -98,7 +72,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(top: 140),
+              margin: const EdgeInsets.only(top: 0),
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -109,7 +83,7 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Você ja conhece a CNN?',
+                    'Você ja conhece a CVV?',
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -118,7 +92,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'A CNN é um canal voltado para o sup...',
+                    'A CVV é um canal voltado para o sup...',
                     style: TextStyle(fontSize: 16, color: AppColors.text),
                   ),
                 ],
@@ -201,14 +175,14 @@ class HomeScreen extends StatelessWidget {
           } else if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+              MaterialPageRoute(
+                builder: (context) => NotificationScreen(user: user),
+              ),
             );
           } else if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => NotificationScreen(user: user),
-              ),
+              MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
             );
           } else if (index == 3) {
             Navigator.push(
