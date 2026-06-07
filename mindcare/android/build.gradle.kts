@@ -5,6 +5,12 @@ allprojects {
     }
 }
 
+subprojects {
+    project.extensions.extraProperties["javaVersion"] = JavaVersion.VERSION_11
+    project.extensions.extraProperties["compileSdk"] = 34
+    project.extensions.extraProperties["minSdk"] = 21
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")

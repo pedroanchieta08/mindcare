@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'sentiment_store.dart';
 import '../data/sentiment_store.dart';
 import '../constants/app_colors.dart';
-import 'package:mindcare/models/user_model.dart';
-import 'home_screen.dart';
-import '../widgets/bottombar.dart';
-
-const _backgroundColor = Color(0xFFDEF0F3);
-const _curveColor = Color(0xFFB2DDE2);
-const _cardColor = Color(0xFFB8A9E0);
+import 'package:mindcare/widgets/bottombar.dart';
+import '../models/app_user.dart';
 
 final _calendarFirstDay = DateTime.utc(2020, 1, 1);
 final _calendarLastDay = DateTime.utc(2030, 12, 31);
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
-  final UserModel user;
+  final AppUser user;
 
   const CalendarPage({super.key, required this.user});
 
@@ -33,17 +26,8 @@ class _CalendarPageState extends State<CalendarPage> {
     super.initState();
     _focusedMonth = DateTime.now();
     _selectedDay = _focusedMonth;
-    SentimentStore().addListener(_refresh);
   }
-
-  @override
-  void dispose() {
-    SentimentStore().removeListener(_refresh);
-    super.dispose();
-  }
-
-  void _refresh() => setState(() {});
-
+  
   void _onDaySelected(DateTime selected, DateTime focused) {
     setState(() {
       _selectedDay = selected;
@@ -56,24 +40,15 @@ class _CalendarPageState extends State<CalendarPage> {
     final size = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      backgroundColor: _backgroundColor,
-      body: Stack(
-        children: [
-          _CurvedBackground(height: size.height * 0.78),
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 24),
-              child: _CalendarCard(
-                width: size.width * 0.92,
-                focusedMonth: _focusedMonth,
-                selectedDay: _selectedDay,
-                onDaySelected: _onDaySelected,
-                onPageChanged: (focused) => _focusedMonth = focused,
-              ),
-            ),
-          ),
-        ],
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.largeDetail,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.smallDetail),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 110),
@@ -81,21 +56,36 @@ class _CalendarPageState extends State<CalendarPage> {
             constraints: BoxConstraints(minHeight: size.height),
             child: Stack(
               children: [
-                _CurvedBackground(height: size.height * 0.78),
+                _CurvedBackground(height: size.height * 0.68),
 
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 24),
-                    child: _CalendarCard(
-                      width: size.width * 0.92,
-                      focusedMonth: _focusedMonth,
-                      selectedDay: _selectedDay,
-                      onDaySelected: _onDaySelected,
-                      onPageChanged: (focused) {
-                        setState(() {
-                          _focusedMonth = focused;
-                        });
+                    padding: const EdgeInsets.only(top: 0),
+                    child: StreamBuilder<Map<String, SentimentEntry>>(
+                      stream: SentimentStore().watchAll(),
+                      builder: (context, snapshot) {
+                        final sentiments = snapshot.data ?? {};
+
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 80),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+
+                        return _CalendarCard(
+                          width: size.width * 0.92,
+                          focusedMonth: _focusedMonth,
+                          selectedDay: _selectedDay,
+                          sentiments: sentiments,
+                          onDaySelected: _onDaySelected,
+                          onPageChanged: (focused) {
+                            setState(() {
+                              _focusedMonth = focused;
+                            });
+                          },
+                        );
                       },
                     ),
                   ),
@@ -128,7 +118,7 @@ class _CurvedBackground extends StatelessWidget {
       width: double.infinity,
       height: height,
       decoration: const BoxDecoration(
-        color: _curveColor,
+        color: AppColors.largeDetail,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(90),
           bottomRight: Radius.circular(90),
@@ -138,11 +128,18 @@ class _CurvedBackground extends StatelessWidget {
   }
 }
 
+String _dateKey(DateTime d) {
+  return '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
+}
+
 class _CalendarCard extends StatelessWidget {
   const _CalendarCard({
     required this.width,
     required this.focusedMonth,
     required this.selectedDay,
+    required this.sentiments,
     required this.onDaySelected,
     required this.onPageChanged,
   });
@@ -150,8 +147,15 @@ class _CalendarCard extends StatelessWidget {
   final double width;
   final DateTime focusedMonth;
   final DateTime? selectedDay;
+  final Map<String, SentimentEntry> sentiments;
   final void Function(DateTime selected, DateTime focused) onDaySelected;
   final void Function(DateTime focused) onPageChanged;
+
+  String _key(DateTime d) {
+    return '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +163,7 @@ class _CalendarCard extends StatelessWidget {
       width: width,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _cardColor,
+        color: AppColors.destaque,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -183,10 +187,17 @@ class _CalendarCard extends StatelessWidget {
             onPageChanged: onPageChanged,
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, _) {
-                final emoji = SentimentStore().get(date);
-                if (emoji == null) return const SizedBox.shrink();
+                final sentiment = sentiments[_key(date)];
+
+                if (sentiment == null) {
+                  return const SizedBox.shrink();
+                }
+
                 return Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                  child: Text(
+                    sentiment.emoji,
+                    style: const TextStyle(fontSize: 20),
+                  ),
                 );
               },
             ),
@@ -199,5 +210,4 @@ class _CalendarCard extends StatelessWidget {
       ),
     );
   }
-}
 }
