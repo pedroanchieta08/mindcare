@@ -26,16 +26,7 @@ class _CalendarPageState extends State<CalendarPage> {
     super.initState();
     _focusedMonth = DateTime.now();
     _selectedDay = _focusedMonth;
-    SentimentStore().addListener(_refresh);
   }
-
-  @override
-  void dispose() {
-    SentimentStore().removeListener(_refresh);
-    super.dispose();
-  }
-
-  void _refresh() => setState(() {});
 
   void _onDaySelected(DateTime selected, DateTime focused) {
     setState(() {
@@ -71,15 +62,31 @@ class _CalendarPageState extends State<CalendarPage> {
                   alignment: Alignment.topCenter,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 0),
-                    child: _CalendarCard(
-                      width: size.width * 0.92,
-                      focusedMonth: _focusedMonth,
-                      selectedDay: _selectedDay,
-                      onDaySelected: _onDaySelected,
-                      onPageChanged: (focused) {
-                        setState(() {
-                          _focusedMonth = focused;
-                        });
+                    child: StreamBuilder<Map<String, SentimentEntry>>(
+                      stream: SentimentStore().watchAll(),
+                      builder: (context, snapshot) {
+                        final sentiments = snapshot.data ?? {};
+
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 80),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+
+                        return _CalendarCard(
+                          width: size.width * 0.92,
+                          focusedMonth: _focusedMonth,
+                          selectedDay: _selectedDay,
+                          sentiments: sentiments,
+                          onDaySelected: _onDaySelected,
+                          onPageChanged: (focused) {
+                            setState(() {
+                              _focusedMonth = focused;
+                            });
+                          },
+                        );
                       },
                     ),
                   ),
@@ -122,11 +129,18 @@ class _CurvedBackground extends StatelessWidget {
   }
 }
 
+String _dateKey(DateTime d) {
+  return '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
+}
+
 class _CalendarCard extends StatelessWidget {
   const _CalendarCard({
     required this.width,
     required this.focusedMonth,
     required this.selectedDay,
+    required this.sentiments,
     required this.onDaySelected,
     required this.onPageChanged,
   });
@@ -134,8 +148,15 @@ class _CalendarCard extends StatelessWidget {
   final double width;
   final DateTime focusedMonth;
   final DateTime? selectedDay;
+  final Map<String, SentimentEntry> sentiments;
   final void Function(DateTime selected, DateTime focused) onDaySelected;
   final void Function(DateTime focused) onPageChanged;
+
+  String _key(DateTime d) {
+    return '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,10 +188,17 @@ class _CalendarCard extends StatelessWidget {
             onPageChanged: onPageChanged,
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, _) {
-                final emoji = SentimentStore().get(date);
-                if (emoji == null) return const SizedBox.shrink();
+                final sentiment = sentiments[_key(date)];
+
+                if (sentiment == null) {
+                  return const SizedBox.shrink();
+                }
+
                 return Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                  child: Text(
+                    sentiment.emoji,
+                    style: const TextStyle(fontSize: 20),
+                  ),
                 );
               },
             ),

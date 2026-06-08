@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mindcare/screens/home_screen.dart';
 import '../data/sentiment_store.dart';
-import '../models/app_user.dart';
-import 'calendar.dart';
 import 'package:mindcare/widgets/bottombar.dart';
 import 'package:mindcare/constants/app_colors.dart';
 
@@ -16,16 +13,8 @@ const List<_OpcaoHumor> _opcoesHumor = [
   (emoji: '😊', label: 'Feliz'),
 ];
 
-const _backgroundColor = Color(0xFFDEF0F3);
-const _curveColor = Color(0xFFB2DDE2);
-const _circleColor = Color(0xFF0E550F);
-const _buttonColor = Color(0xFF5F8B7B);
-const _activeColor = Color(0xFFDDE5FF);
-
 class SentimentalPage extends StatefulWidget {
-  final AppUser user;
-
-  const SentimentalPage({super.key, required this.user});
+  const SentimentalPage({super.key});
 
   @override
   State<SentimentalPage> createState() => _SentimentalPageState();
@@ -33,20 +22,32 @@ class SentimentalPage extends StatefulWidget {
 
 class _SentimentalPageState extends State<SentimentalPage> {
   _OpcaoHumor? _humorSelect;
+  final TextEditingController _textoController = TextEditingController();
 
-  void _registrar() {
+  @override
+  void dispose() {
+    _textoController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _registrar() async {
     if (_humorSelect == null) {
       _snackbar('Selecione um sentimento');
       return;
     }
 
-    SentimentStore().save(DateTime.now(), _humorSelect!.emoji);
-    _snackbar('Sentimento registrado no calendário');
+    try {
+      await SentimentStore().save(
+        date: DateTime.now(),
+        emoji: _humorSelect!.emoji,
+        label: _humorSelect!.label,
+        text: _textoController.text.trim(),
+      );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen(user: widget.user)),
-    );
+      Navigator.pop(context);
+    } catch (e) {
+      _snackbar('Erro ao registrar sentimento: $e');
+    }
   }
 
   void _snackbar(String mensagem) {
@@ -60,7 +61,7 @@ class _SentimentalPageState extends State<SentimentalPage> {
     final size = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.largeDetail,
         elevation: 0,
@@ -88,7 +89,7 @@ class _SentimentalPageState extends State<SentimentalPage> {
                         setState(() => _humorSelect = opcao),
                   ),
                   const SizedBox(height: 4),
-                  const _CampoTexto(),
+                  _CampoTexto(controller: _textoController),
                   const SizedBox(height: 16),
                   _BotaoRegistrar(onPressed: _registrar),
                 ],
@@ -120,7 +121,7 @@ class _CurvedBackground extends StatelessWidget {
       width: double.infinity,
       height: height,
       decoration: const BoxDecoration(
-        color: _curveColor,
+        color: AppColors.largeDetail,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(90),
           bottomRight: Radius.circular(90),
@@ -143,7 +144,7 @@ class _Emoji extends StatelessWidget {
         height: 100,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: _circleColor,
+          color: AppColors.minimum,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -176,7 +177,7 @@ class _SeletorHumor extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        color: _backgroundColor,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(72),
       ),
       child: Row(
@@ -215,7 +216,7 @@ class _ItemHumor extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: ativo ? _activeColor : Colors.transparent,
+              color: ativo ? AppColors.minimum : Colors.transparent,
               shape: BoxShape.circle,
             ),
             child: Text(opcao.emoji, style: const TextStyle(fontSize: 30)),
@@ -232,11 +233,14 @@ class _ItemHumor extends StatelessWidget {
 }
 
 class _CampoTexto extends StatelessWidget {
-  const _CampoTexto();
+  const _CampoTexto({required this.controller});
+
+  final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       maxLines: 6,
       textAlignVertical: TextAlignVertical.top,
       decoration: InputDecoration(
@@ -266,7 +270,7 @@ class _BotaoRegistrar extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _buttonColor,
+          backgroundColor: AppColors.minimum,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
