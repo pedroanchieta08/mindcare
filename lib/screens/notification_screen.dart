@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../models/app_user.dart';
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({super.key});
+  final AppUser user;
+
+  const NotificationScreen({super.key, required this.user});
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();

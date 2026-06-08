@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
+import 'package:mindcare/constants/app_colors.dart';
+import 'package:mindcare/widgets/bottombar.dart';
+import '../models/app_user.dart';
 
 class ProfileItem {
   final IconData icon;
@@ -14,15 +16,9 @@ class ProfileItem {
 }
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final AppUser user;
 
-  void _logout(BuildContext context) {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
-  }
+  const ProfileScreen({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +49,7 @@ class ProfileScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xffe0f2f1),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -74,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 50,
-              backgroundColor: Colors.blueGrey,
+              backgroundColor: AppColors.minimum,
               child: Icon(Icons.person, size: 50, color: Colors.white),
             ),
             const SizedBox(height: 12),
@@ -83,12 +79,12 @@ class ProfileScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.blueGrey,
+                color: AppColors.minimum,
               ),
             ),
             const Text(
               'Usuário desde abr/2026',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: AppColors.text),
             ),
             const SizedBox(height: 16),
             Row(
@@ -99,11 +95,19 @@ class ProfileScreen extends StatelessWidget {
                 _buildStatCard('0.0', 'Média'),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 0),
             _buildSection('MINHA CONTA', accountItems),
             _buildSection('App', appItems),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomBar(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) return;
+
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -113,7 +117,7 @@ class ProfileScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xffb2dfdb),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -151,11 +155,11 @@ class ProfileScreen extends StatelessWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xffb2dfdb),
+                  color: AppColors.largeDetail,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  leading: Icon(item.icon, color: Colors.blueGrey),
+                  leading: Icon(item.icon, color: AppColors.smallDetail),
                   title: Text(
                     item.title,
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -166,7 +170,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   trailing: const Icon(
                     Icons.chevron_right,
-                    color: Colors.blueGrey,
+                    color: AppColors.smallDetail,
                   ),
                   onTap: () {},
                 ),

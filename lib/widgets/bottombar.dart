@@ -35,7 +35,126 @@ class BottomBar extends StatelessWidget {
           ),
           _EmergencyBottomBarItem(
             isSelected: currentIndex == 2,
-            onTap: () => onTap(2),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (context) => Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.destaque,
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.priority_high,
+                          color: AppColors.destaque,
+                          size: 36,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        'Precisa de ajuda?',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        'CVV - 188',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        'SAMU - 192',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        'Outras utilidades',
+                        style: TextStyle(fontSize: 14, color: AppColors.text),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.destaque,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            'Respiração guiada',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.destaque,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            'Frases de apoio',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           _BottomBarItem(
             icon: Icons.calendar_month,
@@ -112,7 +231,7 @@ class _EmergencyBottomBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color itemColor = isSelected
-        ? AppColors.smallDetail
+        ? AppColors.destaque
         : AppColors.text.withValues(alpha: 0.55);
 
     return InkWell(
@@ -127,11 +246,11 @@ class _EmergencyBottomBarItem extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: AppColors.smallDetail,
+                color: AppColors.destaque,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.smallDetail.withValues(alpha: 0.35),
+                    color: AppColors.destaque.withValues(alpha: 0.35),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),

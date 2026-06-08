@@ -1,70 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:mindcare/screens/perfil_screen.dart';
 import 'package:mindcare/screens/sentimental.dart';
+import 'package:mindcare/screens/notification_screen.dart';
 import '../constants/app_colors.dart';
-import '../models/user_model.dart';
 import 'package:mindcare/widgets/bottombar.dart';
 import 'calendar.dart';
 import 'relatorios_user.dart';
-import 'notification_screen.dart';
+import '../models/app_user.dart';
+import '../models/pubmed_artigo.dart';
+import '../services/pubmed_service.dart';
+import '../widgets/pubmed_card.dart';
 
 class HomeScreen extends StatelessWidget {
-  final UserModel user;
+  final AppUser user;
 
-  const HomeScreen({super.key, required this.user});
+  HomeScreen({super.key, required this.user});
 
-  void _logout(BuildContext context) {
-    Navigator.pop(context);
-  }
+  final PubMedService _pubMedService = PubMedService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      drawer: Drawer(
-        backgroundColor: AppColors.background,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: AppColors.largeDetail),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const CircleAvatar(
-                    backgroundColor: AppColors.smallDetail,
-                    child: Icon(Icons.person, color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    user.name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  Text(
-                    user.email,
-                    style: const TextStyle(color: AppColors.text),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home, color: AppColors.smallDetail),
-              title: const Text('Início'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: AppColors.smallDetail),
-              title: const Text('Sair'),
-              onTap: () => _logout(context),
-            ),
-          ],
-        ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -77,6 +34,7 @@ class HomeScreen extends StatelessWidget {
                   Transform.scale(
                     scaleX: 1.4,
                     scaleY: 1.43,
+                    alignment: Alignment(0, 1.5),
                     child: Image.asset(
                       'assets/imagens/fundo.png',
                       width: double.infinity,
@@ -85,7 +43,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    top: 150,
+                    top: 90,
                     left: 0,
                     right: 0,
                     child: Center(
@@ -94,7 +52,7 @@ class HomeScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SentimentalPage(),
+                              builder: (context) => SentimentalPage(),
                             ),
                           );
                         },
@@ -114,7 +72,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(top: 140),
+              margin: const EdgeInsets.only(top: 0),
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -125,7 +83,7 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Você ja conhece a CNN?',
+                    'Você ja conhece a CVV?',
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -134,7 +92,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'A CNN é um canal voltado para o sup...',
+                    'A CVV é um canal voltado para o sup...',
                     style: TextStyle(fontSize: 16, color: AppColors.text),
                   ),
                 ],
@@ -144,59 +102,63 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             const Text(
-              'Notícias',
+              'Estudos sobre saúde mental',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: AppColors.text,
               ),
             ),
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.largeDetail,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'A importância das atividades físicas para a...',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+            const SizedBox(height: 12),
+
+            FutureBuilder<List<PubMedArtigo>>(
+              future: _pubMedService.fetchMentalHealthArticles(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.largeDetail,
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                  ),
-                  const SizedBox(height: 1),
-                ],
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.largeDetail,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pensamentos verdes.',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                    child: const Text(
+                      'Não foi possível carregar os estudos agora.',
+                      style: TextStyle(color: AppColors.text),
                     ),
-                  ),
-                  const SizedBox(height: 1),
-                ],
-              ),
+                  );
+                }
+
+                final artigos = snapshot.data ?? [];
+
+                if (artigos.isEmpty) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.largeDetail,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Text(
+                      'Nenhum estudo encontrado.',
+                      style: TextStyle(color: AppColors.text),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: artigos
+                      .map((artigo) => PubMedArtigoCard(artigo: artigo))
+                      .toList(),
+                );
+              },
             ),
+
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -214,7 +176,7 @@ class HomeScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const NotificationScreen(),
+                builder: (context) => NotificationScreen(user: user),
               ),
             );
           } else if (index == 2) {
@@ -230,7 +192,9 @@ class HomeScreen extends StatelessWidget {
           } else if (index == 4) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              MaterialPageRoute(
+                builder: (context) => ProfileScreen(user: user),
+              ),
             );
           }
         },
