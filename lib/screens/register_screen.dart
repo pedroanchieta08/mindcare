@@ -4,6 +4,7 @@ import '../widgets/custom_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
+import '../services/professional_service.dart';
 import '../models/app_user.dart';
 import 'home_screen.dart';
 import 'relatorios_profissional.dart';
@@ -24,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
+  final ProfessionalService _professionalService = ProfessionalService();
   _AccountType _accountType = _AccountType.user;
 
   Future<void> _register() async {
@@ -64,7 +66,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         role: role,
       );
 
-      await _userService.saveUser(appUser);
+      try {
+        if (role == 'professional') {
+          await _professionalService.saveProfessional(
+            uid: firebaseUser.uid,
+            nome: name,
+            email: email,
+          );
+        } else {
+          await _userService.saveUser(appUser);
+        }
+      } catch (firestoreError) {
+        await firebaseUser.delete();
+        throw Exception(
+          'Erro ao salvar dados do usuário: ${firestoreError.toString()}',
+        );
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cadastro realizado com sucesso!')),
@@ -93,20 +110,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
           (route) => false,
         );
       }
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (authError) {
       String message = 'Erro ao cadastrar.';
 
-      if (e.code == 'email-already-in-use') {
+      if (authError.code == 'email-already-in-use') {
         message = 'Este e-mail já está em uso.';
-      } else if (e.code == 'invalid-email') {
+      } else if (authError.code == 'invalid-email') {
         message = 'E-mail inválido.';
-      } else if (e.code == 'weak-password') {
+      } else if (authError.code == 'weak-password') {
         message = 'A senha deve conter pelo menos 6 caracteres.';
+      } else {
+        message = 'Erro de autenticação: ${authError.code}';
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: ${e.toString()}')),
+      );
     }
   }
 

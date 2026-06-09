@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../data/sentiment_store.dart';
 import '../models/app_user.dart';
+import '../services/professional_service.dart';
+import '../services/shared_report_service.dart';
 
 class RelatoriosUser extends StatefulWidget {
   final AppUser user;
@@ -50,8 +52,8 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: StreamBuilder<Map<String, SentimentEntry>>(
-          stream: SentimentStore().watchAll(),
+        child: StreamBuilder<List<SentimentEntry>>(
+          stream: SentimentStore().watchEntries(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -70,12 +72,34 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
               );
             }
 
-            final report = _buildReport(snapshot.data ?? {});
+            final sentiments = snapshot.data ?? [];
+            final report = _buildReport(sentiments);
 
             return SingleChildScrollView(
               child: Column(
                 children: [
                   _buildTopHeader(isWide),
+                  if (sentiments.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 12,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _openShareReportDialog(sentiments),
+                          icon: const Icon(Icons.share_outlined),
+                          label: const Text('Compartilhar relatório'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.smallDetail,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                       horizontalPadding,
@@ -161,9 +185,9 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
     );
   }
 
-  _ReportData _buildReport(Map<String, SentimentEntry> sentiments) {
+  _ReportData _buildReport(List<SentimentEntry> sentiments) {
     final now = DateTime.now();
-    final allEntries = sentiments.values.toList()
+    final allEntries = sentiments.toList()
       ..sort((a, b) => a.date.compareTo(b.date));
 
     final months = List.generate(
@@ -369,6 +393,104 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
     );
   }
 
+  Future<void> _openShareReportDialog(List<SentimentEntry> entries) async {
+    final professionals = await ProfessionalService().getAllProfessionals();
+
+    if (professionals.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum profissional cadastrado.')),
+      );
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 54,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 18),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const Text(
+                  'Compartilhar relatório com profissional',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (entries.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text('Não há registros para compartilhar.'),
+                  ),
+                ...professionals.map((professional) {
+                  return ListTile(
+                    title: Text(professional.name),
+                    subtitle: Text(professional.email),
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      await _shareReportWithProfessional(
+                        professionalUid: professional.uid,
+                        entries: entries,
+                      );
+                    },
+                  );
+                }).toList(),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _shareReportWithProfessional({
+    required String professionalUid,
+    required List<SentimentEntry> entries,
+  }) async {
+    final counts = <String, int>{};
+
+    for (final entry in entries) {
+      final label = entry.label.trim();
+      if (label.isEmpty) continue;
+      counts[label] = (counts[label] ?? 0) + 1;
+    }
+
+    try {
+      await SharedReportService().shareReport(
+        professionalUid: professionalUid,
+        userId: widget.user.uid,
+        patientName: widget.user.name,
+        counts: counts,
+        totalEntries: entries.length,
+        sharedAt: DateTime.now(),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Relatório compartilhado com sucesso.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao compartilhar relatório: $e')),
+      );
+    }
+  }
+
   IconData _iconForLabel(String label) {
     switch (label.toLowerCase()) {
       case 'feliz':
@@ -497,6 +619,9 @@ class _MonthlyRegisterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final visibleEntries = entries.take(3).toList();
+    final remainingCount = entries.length - visibleEntries.length;
+
     return InkWell(
       borderRadius: BorderRadius.circular(20),
       onTap: onTap,
@@ -527,7 +652,7 @@ class _MonthlyRegisterCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ...entries.map(
+            ...visibleEntries.map(
               (entry) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Container(
@@ -563,6 +688,27 @@ class _MonthlyRegisterCard extends StatelessWidget {
                 ),
               ),
             ),
+            if (remainingCount > 0) ...[
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isWide ? 20 : 10,
+                  vertical: isWide ? 14 : 10,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDEDEDE),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Text(
+                  'Veja mais',
+                  style: TextStyle(
+                    color: const Color(0xFF4A4A4A),
+                    fontSize: isWide ? 18 : 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

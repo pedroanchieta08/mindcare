@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:mindcare/services/auth_service.dart';
 import '../constants/app_colors.dart';
 import '../models/profissional_model.dart';
 import 'login_screen.dart';
@@ -55,7 +56,8 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     super.dispose();
   }
 
-  void _logout() {
+  Future<void> _logout() async {
+    await AuthService().signOut();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -82,53 +84,42 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
         title: const Text('Meus Pacientes'),
         backgroundColor: AppColors.smallDetail,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _firestore.collection('users').snapshots(),
-        builder: (context, usersSnapshot) {
-          if (usersSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Builder(
+        builder: (context) {
+          final currentProfessionalUid = FirebaseAuth.instance.currentUser?.uid;
 
-          if (usersSnapshot.hasError) {
-            return Center(
+          if (currentProfessionalUid == null) {
+            return const Center(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20),
                 child: Text(
-                  'Erro ao carregar usuarios: ${usersSnapshot.error}',
+                  'Profissional não autenticado.',
                   textAlign: TextAlign.center,
                 ),
               ),
             );
           }
 
-          final usersById = {
-            for (final doc
-                in usersSnapshot.data?.docs ??
-                    <QueryDocumentSnapshot<Map<String, dynamic>>>[])
-              doc.id: doc.data(),
-          };
-
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: _firestore.collectionGroup('sentiments').snapshots(),
-            builder: (context, sentimentsSnapshot) {
-              if (sentimentsSnapshot.connectionState ==
+            stream: _firestore
+                .collection('profissional')
+                .doc(currentProfessionalUid)
+                .collection('sharedReports')
+                .orderBy('sharedAt', descending: true)
+                .snapshots(),
+            builder: (context, sharedReportsSnapshot) {
+              if (sharedReportsSnapshot.connectionState ==
                   ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (sentimentsSnapshot.hasError) {
+              if (sharedReportsSnapshot.hasError) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Text(
-                      'Erro ao carregar sentimentos: ${sentimentsSnapshot.error}',
+                      'Erro ao carregar relatórios: ${sharedReportsSnapshot.error}',
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -136,8 +127,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
               }
 
               final reports = _buildReports(
-                usersById: usersById,
-                sentimentDocs: sentimentsSnapshot.data?.docs ?? const [],
+                sharedReportDocs: sharedReportsSnapshot.data?.docs ?? const [],
               );
 
               final filteredReports = reports.where((report) {
@@ -175,7 +165,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Text(
-                          'Nenhum registro compartilhado encontrado.',
+                          'Nenhum relatório compartilhado encontrado.',
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -464,74 +454,47 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
   }
 
   List<ReportItem> _buildReports({
-    required Map<String, Map<String, dynamic>> usersById,
-    required List<QueryDocumentSnapshot<Map<String, dynamic>>> sentimentDocs,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> sharedReportDocs,
   }) {
-    final Map<String, _UserSentimentAggregate> byUser = {};
-
-    for (final doc in sentimentDocs) {
-      final userRef = doc.reference.parent.parent;
-      if (userRef == null) {
-        continue;
-      }
-
+    final reports = sharedReportDocs.map((doc) {
       final data = doc.data();
-      if (!_isSharedWithProfessional(data)) {
-        continue;
-      }
+      final rawCounts = Map<String, dynamic>.from(data['counts'] ?? {});
+      final counts = <String, int>{};
 
-      final rawLabel = (data['label'] ?? '').toString().trim();
-      if (rawLabel.isEmpty) {
-        continue;
-      }
+      rawCounts.forEach((key, value) {
+        if (value is int) {
+          counts[key.toString()] = value;
+        } else if (value is num) {
+          counts[key.toString()] = value.toInt();
+        }
+      });
 
-      final dateValue = data['date'];
-      DateTime? date;
-      if (dateValue is Timestamp) {
-        date = dateValue.toDate();
-      }
-
-      final aggregate = byUser.putIfAbsent(
-        userRef.id,
-        () => _UserSentimentAggregate(),
-      );
-
-      aggregate.total += 1;
-      aggregate.counts[rawLabel] = (aggregate.counts[rawLabel] ?? 0) + 1;
-
-      if (date != null) {
-        aggregate.firstDate =
-            aggregate.firstDate == null || date.isBefore(aggregate.firstDate!)
-            ? date
-            : aggregate.firstDate;
-
-        aggregate.lastDate =
-            aggregate.lastDate == null || date.isAfter(aggregate.lastDate!)
-            ? date
-            : aggregate.lastDate;
-      }
-    }
-
-    final reports = byUser.entries.map((entry) {
-      final userId = entry.key;
-      final aggregate = entry.value;
-      final userMap = usersById[userId];
-      final userName = (userMap?['name'] ?? '').toString().trim();
+      final totalEntries = data['totalEntries'] is int
+          ? data['totalEntries'] as int
+          : counts.values.fold<int>(0, (sum, value) => sum + value);
 
       final emotions = _buildEmotionDistribution(
-        counts: aggregate.counts,
-        total: aggregate.total,
+        counts: counts,
+        total: totalEntries == 0 ? 1 : totalEntries,
       );
 
-      final subtitle = _buildSubtitle(
-        firstDate: aggregate.firstDate,
-        lastDate: aggregate.lastDate,
-        total: aggregate.total,
-      );
+      DateTime? sharedAt;
+      final sharedAtValue = data['sharedAt'];
+      if (sharedAtValue is Timestamp) {
+        sharedAt = sharedAtValue.toDate();
+      } else if (sharedAtValue is DateTime) {
+        sharedAt = sharedAtValue;
+      }
+
+      final subtitle = sharedAt != null
+          ? 'Compartilhado em ${sharedAt.day.toString().padLeft(2, '0')}/${sharedAt.month.toString().padLeft(2, '0')}/${sharedAt.year} · $totalEntries registros'
+          : 'Relatório compartilhado · $totalEntries registros';
+
+      final patientName = data['patientName']?.toString().trim() ?? '';
 
       return ReportItem(
-        userId: userId,
-        name: userName.isEmpty ? 'Paciente sem nome' : userName,
+        userId: data['userId']?.toString() ?? '',
+        name: patientName.isEmpty ? 'Paciente sem nome' : patientName,
         subtitle: subtitle,
         emotions: emotions,
       );
@@ -540,23 +503,8 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     reports.sort(
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     );
+
     return reports;
-  }
-
-  bool _isSharedWithProfessional(Map<String, dynamic> data) {
-    final hasAnyShareFlag =
-        data.containsKey('sharedWithProfessional') ||
-        data.containsKey('shared') ||
-        data.containsKey('isShared');
-
-    if (!hasAnyShareFlag) {
-      // Backward compatibility: if no sharing flag exists yet, keep showing records.
-      return true;
-    }
-
-    return data['sharedWithProfessional'] == true ||
-        data['shared'] == true ||
-        data['isShared'] == true;
   }
 
   List<EmotionDistribution> _buildEmotionDistribution({
@@ -652,4 +600,5 @@ class _UserSentimentAggregate {
   int total = 0;
   DateTime? firstDate;
   DateTime? lastDate;
+  QueryDocumentSnapshot<Map<String, dynamic>>? firstDocument;
 }
