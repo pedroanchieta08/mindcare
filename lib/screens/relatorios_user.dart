@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
@@ -426,10 +427,7 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
                 ),
                 const Text(
                   'Compartilhar relatório com profissional',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 16),
                 if (entries.isEmpty)
@@ -463,6 +461,16 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
     required String professionalUid,
     required List<SentimentEntry> entries,
   }) async {
+    final trimmedProfessionalUid = professionalUid.trim();
+    if (trimmedProfessionalUid.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profissional inválido. Tente novamente.'),
+        ),
+      );
+      return;
+    }
+
     final counts = <String, int>{};
 
     for (final entry in entries) {
@@ -473,7 +481,7 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
 
     try {
       await SharedReportService().shareReport(
-        professionalUid: professionalUid,
+        professionalUid: trimmedProfessionalUid,
         userId: widget.user.uid,
         patientName: widget.user.name,
         counts: counts,
@@ -484,6 +492,18 @@ class _RelatoriosUserState extends State<RelatoriosUser> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Relatório compartilhado com sucesso.')),
       );
+    } on FirebaseException catch (e) {
+      final message = switch (e.code) {
+        'permission-denied' =>
+          'Sem permissão no Firebase para compartilhar. Verifique as regras do Firestore.',
+        'unavailable' =>
+          'Firebase indisponível no momento. Tente novamente em instantes.',
+        _ => 'Erro no Firebase ao compartilhar relatório (${e.code}).',
+      };
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao compartilhar relatório: $e')),

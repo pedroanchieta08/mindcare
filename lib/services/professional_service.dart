@@ -38,17 +38,18 @@ class ProfessionalService {
   Future<List<AppUser>> getAllProfessionals() async {
     final snapshot = await _firestore.collection('profissional').get();
 
-    return snapshot.docs
-        .map((doc) {
-          final data = doc.data();
-          return AppUser(
-            uid: data['uid'] ?? '',
-            name: data['nome'] ?? '',
-            email: data['email'] ?? '',
-            role: 'professional',
-          );
-        })
-        .toList();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      final uid = (data['uid']?.toString().trim().isNotEmpty ?? false)
+          ? data['uid'].toString()
+          : doc.id;
+      return AppUser(
+        uid: uid,
+        name: data['nome'] ?? '',
+        email: data['email'] ?? '',
+        role: 'professional',
+      );
+    }).toList();
   }
 
   Future<void> updateProfessional({
