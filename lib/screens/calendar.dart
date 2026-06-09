@@ -35,6 +35,21 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
+  Map<String, SentimentEntry> _groupEntriesByDay(List<SentimentEntry> entries) {
+    final grouped = <String, SentimentEntry>{};
+
+    for (final entry in entries) {
+      final key = _dateKey(entry.date);
+      final existing = grouped[key];
+
+      if (existing == null || entry.date.isAfter(existing.date)) {
+        grouped[key] = entry;
+      }
+    }
+
+    return grouped;
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -62,10 +77,11 @@ class _CalendarPageState extends State<CalendarPage> {
                   alignment: Alignment.topCenter,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 0),
-                    child: StreamBuilder<Map<String, SentimentEntry>>(
-                      stream: SentimentStore().watchAll(),
+                    child: StreamBuilder<List<SentimentEntry>>(
+                      stream: SentimentStore().watchEntries(),
                       builder: (context, snapshot) {
-                        final sentiments = snapshot.data ?? {};
+                        final entries = snapshot.data ?? [];
+                        final sentiments = _groupEntriesByDay(entries);
 
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
