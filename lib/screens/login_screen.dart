@@ -7,7 +7,9 @@ import 'relatorios_profissional.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
+import '../services/professional_service.dart';
 import '../models/app_user.dart';
+import '../models/profissional_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final UserService _userService = UserService();
 
   Future<void> _login() async {
+    final professionalService = ProfessionalService();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -48,7 +51,13 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      final appUser = await _userService.getUserById(firebaseUser.uid);
+      AppUser? appUser = await _userService.getUserById(firebaseUser.uid);
+
+      if (appUser == null) {
+        appUser = await professionalService.getProfessionalById(
+          firebaseUser.uid,
+        );
+      }
 
       if (appUser == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,21 +66,39 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen(user: appUser)),
-      );
+      final loggedUser = appUser;
+      final isProfessional = loggedUser.role.toLowerCase() == 'professional';
+
+      if (isProfessional) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RelatoriosProfissional(
+              profissional: ProfissionalModel(
+                name: loggedUser.name,
+                email: loggedUser.email,
+                password: '',
+              ),
+            ),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen(user: loggedUser)),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       String message = 'Erro ao entrar.';
 
       if (e.code == 'invalid-credential') {
-        message = 'E-mail ou senha incálidos.';
+        message = 'E-mail ou senha inválidos.';
       } else if (e.code == 'user-not-found') {
         message = 'Usuário não encontrado.';
       } else if (e.code == 'wrong-password') {
         message = 'Senha incorreta.';
       } else if (e.code == 'invalid-email') {
-        message = 'E-mail incálido.';
+        message = 'E-mail inválido.';
       }
       ScaffoldMessenger.of(
         context,

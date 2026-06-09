@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mindcare/constants/app_colors.dart';
 import 'package:mindcare/widgets/bottombar.dart';
 import '../models/app_user.dart';
+import '../services/auth_service.dart';
+import 'login_screen.dart';
 
 class ProfileItem {
   final IconData icon;
@@ -19,6 +21,15 @@ class ProfileScreen extends StatelessWidget {
   final AppUser user;
 
   const ProfileScreen({super.key, required this.user});
+
+  Future<void> _logout(BuildContext context) async {
+    await AuthService().signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +65,16 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.smallDetail),
+          icon: const Icon(Icons.arrow_back, color: Colors.blueGrey),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.blueGrey),
+            tooltip: 'Sair',
+            onPressed: () => _logout(context),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

@@ -1,13 +1,37 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:mindcare/services/auth_service.dart';
 import '../constants/app_colors.dart';
 import '../models/profissional_model.dart';
 import 'login_screen.dart';
 
-class GraphData {
-  final String mes;
-  final double valor;
-  GraphData(this.mes, this.valor);
+class EmotionDistribution {
+  final String label;
+  final int percent;
+  final Color color;
+  final IconData icon;
+
+  const EmotionDistribution({
+    required this.label,
+    required this.percent,
+    required this.color,
+    required this.icon,
+  });
+}
+
+class ReportItem {
+  final String userId;
+  final String name;
+  final String subtitle;
+  final List<EmotionDistribution> emotions;
+
+  const ReportItem({
+    required this.userId,
+    required this.name,
+    required this.subtitle,
+    required this.emotions,
+  });
 }
 
 class RelatoriosProfissional extends StatefulWidget {
@@ -20,12 +44,31 @@ class RelatoriosProfissional extends StatefulWidget {
 }
 
 class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
-  void _logout() {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController _searchController = TextEditingController();
+  final Map<String, bool> _seenByUser = {};
+
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _logout() async {
+    await AuthService().signOut();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
+  }
+
+  void _toggleSeen(String userId) {
+    setState(() {
+      _seenByUser[userId] = !(_seenByUser[userId] ?? false);
+    });
   }
 
   @override
@@ -36,51 +79,105 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
         leading: IconButton(
           icon: const Icon(Icons.logout),
           tooltip: 'Sair',
-          onPressed: () => _logout(),
+          onPressed: _logout,
         ),
         title: const Text('Meus Pacientes'),
         backgroundColor: AppColors.smallDetail,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSearchBar(),
-            const SizedBox(height: 24),
-            const Text(
-              'RELATÓRIOS RECEBIDOS',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.black54,
+      body: Builder(
+        builder: (context) {
+          final currentProfessionalUid = FirebaseAuth.instance.currentUser?.uid;
+
+          if (currentProfessionalUid == null) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  'Profissional não autenticado.',
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            _buildReportCard(
-              name: 'Fátima',
-              subtitle: 'Relatório · 01 abr - 07 abr · 2026',
-              status: 'NOVO',
-              positiveButton: 'Ver relatório',
-              negativeButton: 'Marcar visto',
-            ),
-            _buildReportCard(
-              name: 'Otávio',
-              subtitle: 'Relatório · 01 abr - 07 abr · 2026',
-              status: 'Visto',
-              positiveButton: 'Ver relatório',
-              negativeButton: 'Desmarcar visto',
-              statusColor: Colors.teal,
-            ),
-          ],
-        ),
+            );
+          }
+
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: _firestore
+                .collection('profissional')
+                .doc(currentProfessionalUid)
+                .collection('sharedReports')
+                .orderBy('sharedAt', descending: true)
+                .snapshots(),
+            builder: (context, sharedReportsSnapshot) {
+              if (sharedReportsSnapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (sharedReportsSnapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text(
+                      'Erro ao carregar relatórios: ${sharedReportsSnapshot.error}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
+              final reports = _buildReports(
+                sharedReportDocs: sharedReportsSnapshot.data?.docs ?? const [],
+              );
+
+              final filteredReports = reports.where((report) {
+                if (_searchQuery.trim().isEmpty) {
+                  return true;
+                }
+
+                return report.name.toLowerCase().contains(
+                  _searchQuery.trim().toLowerCase(),
+                );
+              }).toList();
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSearchBar(),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'RELATORIOS RECEBIDOS',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (filteredReports.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Text(
+                          'Nenhum relatório compartilhado encontrado.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ...filteredReports.map(
+                      (report) => _buildReportCard(report: report),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -93,8 +190,14 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
-        decoration: InputDecoration(
-          icon: const Icon(Icons.search, color: Colors.black54),
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        decoration: const InputDecoration(
+          icon: Icon(Icons.search, color: Colors.black54),
           hintText: 'Buscar paciente...',
           border: InputBorder.none,
         ),
@@ -102,14 +205,12 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     );
   }
 
-  Widget _buildReportCard({
-    required String name,
-    required String subtitle,
-    required String status,
-    required String positiveButton,
-    required String negativeButton,
-    Color statusColor = Colors.redAccent,
-  }) {
+  Widget _buildReportCard({required ReportItem report}) {
+    final isSeen = _seenByUser[report.userId] ?? false;
+    final status = isSeen ? 'Visto' : 'NOVO';
+    final statusColor = isSeen ? Colors.teal : Colors.redAccent;
+    final seenButtonLabel = isSeen ? 'Desmarcar visto' : 'Marcar visto';
+
     return Card(
       color: AppColors.white,
       margin: const EdgeInsets.only(bottom: 16),
@@ -131,7 +232,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name,
+                        report.name,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -139,7 +240,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        subtitle,
+                        report.subtitle,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,
@@ -173,18 +274,17 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
               children: [
                 Expanded(
                   child: _buildActionButton(
-                    positiveButton,
+                    'Ver relatorio',
                     AppColors.smallDetail,
-                    onPressed: () =>
-                        _showReportDialog(name: name, subtitle: subtitle),
+                    onPressed: () => _showReportDialog(report: report),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildActionButton(
-                    negativeButton,
+                    seenButtonLabel,
                     AppColors.largeDetail,
-                    onPressed: () {},
+                    onPressed: () => _toggleSeen(report.userId),
                   ),
                 ),
               ],
@@ -217,7 +317,10 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     );
   }
 
-  void _showReportDialog({required String name, required String subtitle}) {
+  void _showReportDialog({required ReportItem report}) {
+    final isSeen = _seenByUser[report.userId] ?? false;
+    final markLabel = isSeen ? 'Desmarcar visto' : 'Marcar visto';
+
     showDialog(
       context: context,
       builder: (context) {
@@ -228,7 +331,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
           ),
           title: Row(
             children: [
-              Expanded(child: Text('Relatório de $name')),
+              Expanded(child: Text('Relatorio de ${report.name}')),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -244,76 +347,258 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8),
-                Text(subtitle, style: const TextStyle(color: Colors.black54)),
+                Text(
+                  report.subtitle,
+                  style: const TextStyle(color: Colors.black54),
+                ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Resumo do Relatório:',
+                  'Distribuicao de emocoes:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                Container(
-                  height: 200,
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(right: 12),
-                  child: SfCartesianChart(
-                    primaryXAxis: CategoryAxis(
-                      majorGridLines: const MajorGridLines(width: 0),
-                      axisLine: const AxisLine(width: 1, color: Colors.black54),
-                      labelStyle: const TextStyle(
-                        color: Colors.black54,
-                        fontSize: 12,
-                      ),
-                    ),
-
-                    primaryYAxis: NumericAxis(
-                      minimum: 0,
-                      maximum: 35,
-                      interval: 10,
-                      axisLine: const AxisLine(width: 1, color: Colors.black54),
-                      majorGridLines: const MajorGridLines(
-                        width: 0.5,
-                        color: Colors.black12,
-                      ),
-                    ),
-                    series: <CartesianSeries<GraphData, String>>[
-                      BarSeries<GraphData, String>(
-                        dataSource: [
-                          GraphData('Jan', 20),
-                          GraphData('Fev', 30),
-                          GraphData('Mar', 15),
-                          GraphData('Abr', 25),
-                          GraphData('Mai', 10),
-                          GraphData('Jun', 30),
-                        ],
-                        xValueMapper: (GraphData data, _) => data.mes,
-                        yValueMapper: (GraphData data, _) => data.valor,
-                        color: AppColors.smallDetail,
-                        width: 0.6,
-                        borderRadius: BorderRadius.zero,
-
-                        dataLabelSettings: const DataLabelSettings(
-                          isVisible: true,
-                          textStyle: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const SizedBox(height: 8),
+                _buildEmotionDistributionChart(report.emotions),
               ],
             ),
           ),
           actions: [
             ElevatedButton(
               onPressed: () {
+                _toggleSeen(report.userId);
                 Navigator.of(context).pop();
               },
-              child: const Text('Marcar visto'),
+              child: Text(markLabel),
             ),
           ],
         );
       },
     );
   }
+
+  Widget _buildEmotionDistributionChart(List<EmotionDistribution> emotions) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFEDEEEF),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          ...emotions.map(_buildEmotionRow),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmotionRow(EmotionDistribution emotion) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 34,
+            height: 34,
+            child: Center(
+              child: Icon(emotion.icon, color: Colors.black87, size: 22),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final barWidth =
+                            constraints.maxWidth * (emotion.percent / 100);
+
+                        return Stack(
+                          children: [
+                            Container(height: 14, color: Colors.transparent),
+                            Container(
+                              width: barWidth,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: emotion.color,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 48,
+                  child: Text(
+                    '${emotion.percent}%',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<ReportItem> _buildReports({
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> sharedReportDocs,
+  }) {
+    final reports = sharedReportDocs.map((doc) {
+      final data = doc.data();
+      final rawCounts = Map<String, dynamic>.from(data['counts'] ?? {});
+      final counts = <String, int>{};
+
+      rawCounts.forEach((key, value) {
+        if (value is int) {
+          counts[key.toString()] = value;
+        } else if (value is num) {
+          counts[key.toString()] = value.toInt();
+        }
+      });
+
+      final totalEntries = data['totalEntries'] is int
+          ? data['totalEntries'] as int
+          : counts.values.fold<int>(0, (sum, value) => sum + value);
+
+      final emotions = _buildEmotionDistribution(
+        counts: counts,
+        total: totalEntries == 0 ? 1 : totalEntries,
+      );
+
+      DateTime? sharedAt;
+      final sharedAtValue = data['sharedAt'];
+      if (sharedAtValue is Timestamp) {
+        sharedAt = sharedAtValue.toDate();
+      } else if (sharedAtValue is DateTime) {
+        sharedAt = sharedAtValue;
+      }
+
+      final subtitle = sharedAt != null
+          ? 'Compartilhado em ${sharedAt.day.toString().padLeft(2, '0')}/${sharedAt.month.toString().padLeft(2, '0')}/${sharedAt.year} · $totalEntries registros'
+          : 'Relatório compartilhado · $totalEntries registros';
+
+      final patientName = data['patientName']?.toString().trim() ?? '';
+
+      return ReportItem(
+        userId: data['userId']?.toString() ?? '',
+        name: patientName.isEmpty ? 'Paciente sem nome' : patientName,
+        subtitle: subtitle,
+        emotions: emotions,
+      );
+    }).toList();
+
+    reports.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+
+    return reports;
+  }
+
+  List<EmotionDistribution> _buildEmotionDistribution({
+    required Map<String, int> counts,
+    required int total,
+  }) {
+    final labels = counts.keys.toList()
+      ..sort((a, b) => counts[b]!.compareTo(counts[a]!));
+
+    return labels
+        .map((label) {
+          final percent = ((counts[label]! / total) * 100).round();
+          return EmotionDistribution(
+            label: label,
+            percent: percent,
+            color: _colorForLabel(label),
+            icon: _iconForLabel(label),
+          );
+        })
+        .where((emotion) => emotion.percent > 0)
+        .toList();
+  }
+
+  String _buildSubtitle({
+    required DateTime? firstDate,
+    required DateTime? lastDate,
+    required int total,
+  }) {
+    final monthNames = [
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
+    ];
+
+    if (firstDate == null || lastDate == null) {
+      return 'Relatorio compartilhado · $total registros';
+    }
+
+    final firstLabel =
+        '${firstDate.day.toString().padLeft(2, '0')} ${monthNames[firstDate.month - 1]}';
+    final lastLabel =
+        '${lastDate.day.toString().padLeft(2, '0')} ${monthNames[lastDate.month - 1]}';
+
+    return 'Relatorio · $firstLabel - $lastLabel · ${lastDate.year}';
+  }
+
+  IconData _iconForLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'calmo':
+        return Icons.sentiment_satisfied;
+      case 'feliz':
+        return Icons.sentiment_very_satisfied;
+      case 'ansioso':
+        return Icons.sentiment_neutral;
+      case 'irritado':
+        return Icons.sentiment_dissatisfied;
+      case 'triste':
+        return Icons.sentiment_very_dissatisfied;
+      default:
+        return Icons.mood;
+    }
+  }
+
+  Color _colorForLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'calmo':
+        return const Color(0xFF188D14);
+      case 'feliz':
+        return const Color(0xFF2E91D9);
+      case 'ansioso':
+        return const Color(0xFFE5C92E);
+      case 'irritado':
+        return const Color(0xFFF25E5E);
+      case 'triste':
+        return const Color(0xFF8E4EC6);
+      default:
+        return Colors.grey;
+    }
+  }
+}
+
+class _UserSentimentAggregate {
+  final Map<String, int> counts = {};
+  int total = 0;
+  DateTime? firstDate;
+  DateTime? lastDate;
+  QueryDocumentSnapshot<Map<String, dynamic>>? firstDocument;
 }
