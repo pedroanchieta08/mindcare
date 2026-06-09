@@ -10,6 +10,8 @@ import '../models/app_user.dart';
 import '../models/pubmed_artigo.dart';
 import '../services/pubmed_service.dart';
 import '../widgets/pubmed_card.dart';
+import 'package:mindcare/screens/cvv_screen.dart';
+import 'package:mindcare/widgets/sentimentos_semana.dart';
 
 class HomeScreen extends StatelessWidget {
   final AppUser user;
@@ -42,6 +44,7 @@ class HomeScreen extends StatelessWidget {
                       fit: BoxFit.fill,
                     ),
                   ),
+                  Positioned(top: 16, left: 0, right: 0, child: WeekBar()),
                   Positioned(
                     top: 90,
                     left: 0,
@@ -60,7 +63,7 @@ class HomeScreen extends StatelessWidget {
                           radius: 120,
                           backgroundColor: AppColors.minimum,
                           child: Icon(
-                            Icons.person,
+                            Icons.favorite,
                             size: 120,
                             color: Colors.white,
                           ),
@@ -71,31 +74,34 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Container(
-              margin: const EdgeInsets.only(top: 0),
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.largeDetail,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Você ja conhece a CVV?',
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CvvScreen()),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(top: 0),
+                width: double.infinity,
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: AppColors.largeDetail,
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Você já conhece o CVV?',
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.text,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'A CVV é um canal voltado para o sup...',
-                    style: TextStyle(fontSize: 16, color: AppColors.text),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 

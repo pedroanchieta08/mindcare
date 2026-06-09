@@ -28,6 +28,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditingSeguranca = false;
   bool _isEditingPrivacidade = false;
 
+  Future<void> _logout(BuildContext context) async {
+    await AuthService().signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   void initState() {
     super.initState();

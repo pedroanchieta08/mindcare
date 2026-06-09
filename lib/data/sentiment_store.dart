@@ -59,29 +59,36 @@ class SentimentStore {
     required String emoji,
     required String label,
     required String text,
+    bool sharedWithProfessional = false,
+    String? sharedProfessionalUid,
+    String? patientName,
   }) async {
-    final normalizedDate = DateTime(date.year, date.month, date.day);
-    final docId = _key(normalizedDate);
-
-    await _collection.doc(docId).set({
+    final data = {
       'emoji': emoji,
       'label': label,
       'text': text,
-      'date': Timestamp.fromDate(normalizedDate),
-      'updatedAt': FieldValue.serverTimestamp(),
+      'date': Timestamp.fromDate(date),
       'createdAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+      'updatedAt': FieldValue.serverTimestamp(),
+      'sharedWithProfessional': sharedWithProfessional,
+    };
+
+    if (sharedProfessionalUid != null) {
+      data['sharedProfessionalUid'] = sharedProfessionalUid;
+    }
+
+    if (patientName != null) {
+      data['patientName'] = patientName;
+    }
+
+    await _collection.add(data);
   }
 
-  Stream<Map<String, SentimentEntry>> watchAll() {
-    return _collection.snapshots().map((snapshot) {
-      final data = <String, SentimentEntry>{};
-
-      for (final doc in snapshot.docs) {
-        data[doc.id] = SentimentEntry.fromMap(doc.data());
-      }
-
-      return data;
+  Stream<List<SentimentEntry>> watchEntries() {
+    return _collection.orderBy('date').snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => SentimentEntry.fromMap(doc.data()))
+          .toList();
     });
   }
 
