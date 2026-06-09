@@ -2,7 +2,7 @@
 | Alunos |Funções |Vídeo |
 | ----| ---- |
 | Pedro Anchieta Santos | Home e botão de emergência. |
-| Victtor Hugo Santos | Calendário e cadastro de emoções. | https://youtu.be/_1CJ9LqOQnM |
+| Victtor Hugo Santos | Calendário e cadastro de emoções. | https://youtu.be/_1CJ9LqOQnM 
 | Yuri Ferro Soares | Telas de Relatorios. |
 |João Vitor Rodrigues | Tela de perfil. |
 |Otávio Henrique | Telas de Login \ Cadastro \ Esqueceu a senha. |
