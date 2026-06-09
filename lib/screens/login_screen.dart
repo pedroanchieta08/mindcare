@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../models/app_user.dart';
+import '../models/profissional_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -57,10 +58,27 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen(user: appUser)),
-      );
+      final isProfessional = appUser.role.toLowerCase() == 'professional';
+
+      if (isProfessional) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RelatoriosProfissional(
+              profissional: ProfissionalModel(
+                name: appUser.name,
+                email: appUser.email,
+                password: '',
+              ),
+            ),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen(user: appUser)),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       String message = 'Erro ao entrar.';
 

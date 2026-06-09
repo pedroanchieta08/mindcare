@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../models/profissional_model.dart';
 import 'login_screen.dart';
@@ -18,15 +20,15 @@ class EmotionDistribution {
 }
 
 class ReportItem {
+  final String userId;
   final String name;
   final String subtitle;
-  bool isSeen;
   final List<EmotionDistribution> emotions;
 
-  ReportItem({
+  const ReportItem({
+    required this.userId,
     required this.name,
     required this.subtitle,
-    required this.isSeen,
     required this.emotions,
   });
 }
@@ -41,87 +43,16 @@ class RelatoriosProfissional extends StatefulWidget {
 }
 
 class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
-  late final List<ReportItem> _reports;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController _searchController = TextEditingController();
+  final Map<String, bool> _seenByUser = {};
+
+  String _searchQuery = '';
 
   @override
-  void initState() {
-    super.initState();
-    _reports = [
-      ReportItem(
-        name: 'Fatima',
-        subtitle: 'Relatorio · 01 abr - 07 abr · 2026',
-        isSeen: false,
-        emotions: const [
-          EmotionDistribution(
-            label: 'Calmo',
-            percent: 45,
-            color: Color(0xFF188D14),
-            icon: Icons.sentiment_satisfied,
-          ),
-          EmotionDistribution(
-            label: 'Feliz',
-            percent: 25,
-            color: Color(0xFF2E91D9),
-            icon: Icons.sentiment_very_satisfied,
-          ),
-          EmotionDistribution(
-            label: 'Ansioso',
-            percent: 20,
-            color: Color(0xFFE5C92E),
-            icon: Icons.sentiment_neutral,
-          ),
-          EmotionDistribution(
-            label: 'Irritado',
-            percent: 5,
-            color: Color(0xFFF25E5E),
-            icon: Icons.sentiment_dissatisfied,
-          ),
-          EmotionDistribution(
-            label: 'Triste',
-            percent: 5,
-            color: Color(0xFFF25E5E),
-            icon: Icons.sentiment_very_dissatisfied,
-          ),
-        ],
-      ),
-      ReportItem(
-        name: 'Otavio',
-        subtitle: 'Relatorio · 12 fev - 18 jun · 2026',
-        isSeen: true,
-        emotions: const [
-          EmotionDistribution(
-            label: 'Calmo',
-            percent: 30,
-            color: Color(0xFF188D14),
-            icon: Icons.sentiment_satisfied,
-          ),
-          EmotionDistribution(
-            label: 'Feliz',
-            percent: 35,
-            color: Color(0xFF2E91D9),
-            icon: Icons.sentiment_very_satisfied,
-          ),
-          EmotionDistribution(
-            label: 'Ansioso',
-            percent: 15,
-            color: Color(0xFFE5C92E),
-            icon: Icons.sentiment_neutral,
-          ),
-          EmotionDistribution(
-            label: 'Irritado',
-            percent: 10,
-            color: Color(0xFFF25E5E),
-            icon: Icons.sentiment_dissatisfied,
-          ),
-          EmotionDistribution(
-            label: 'Triste',
-            percent: 10,
-            color: Color(0xFFF25E5E),
-            icon: Icons.sentiment_very_dissatisfied,
-          ),
-        ],
-      ),
-    ];
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _logout() {
@@ -132,9 +63,9 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     );
   }
 
-  void _toggleSeen(int index) {
+  void _toggleSeen(String userId) {
     setState(() {
-      _reports[index].isSeen = !_reports[index].isSeen;
+      _seenByUser[userId] = !(_seenByUser[userId] ?? false);
     });
   }
 
@@ -146,7 +77,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
         leading: IconButton(
           icon: const Icon(Icons.logout),
           tooltip: 'Sair',
-          onPressed: () => _logout(),
+          onPressed: _logout,
         ),
         title: const Text('Meus Pacientes'),
         backgroundColor: AppColors.smallDetail,
@@ -158,29 +89,105 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSearchBar(),
-            const SizedBox(height: 24),
-            const Text(
-              'RELATÓRIOS RECEBIDOS',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.black54,
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _firestore.collection('users').snapshots(),
+        builder: (context, usersSnapshot) {
+          if (usersSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (usersSnapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  'Erro ao carregar usuarios: ${usersSnapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            ...List.generate(
-              _reports.length,
-              (index) =>
-                  _buildReportCard(report: _reports[index], index: index),
-            ),
-          ],
-        ),
+            );
+          }
+
+          final usersById = {
+            for (final doc
+                in usersSnapshot.data?.docs ??
+                    <QueryDocumentSnapshot<Map<String, dynamic>>>[])
+              doc.id: doc.data(),
+          };
+
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: _firestore.collectionGroup('sentiments').snapshots(),
+            builder: (context, sentimentsSnapshot) {
+              if (sentimentsSnapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (sentimentsSnapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text(
+                      'Erro ao carregar sentimentos: ${sentimentsSnapshot.error}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
+              final reports = _buildReports(
+                usersById: usersById,
+                sentimentDocs: sentimentsSnapshot.data?.docs ?? const [],
+              );
+
+              final filteredReports = reports.where((report) {
+                if (_searchQuery.trim().isEmpty) {
+                  return true;
+                }
+
+                return report.name.toLowerCase().contains(
+                  _searchQuery.trim().toLowerCase(),
+                );
+              }).toList();
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSearchBar(),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'RELATORIOS RECEBIDOS',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (filteredReports.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Text(
+                          'Nenhum registro compartilhado encontrado.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ...filteredReports.map(
+                      (report) => _buildReportCard(report: report),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -193,8 +200,14 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
-        decoration: InputDecoration(
-          icon: const Icon(Icons.search, color: Colors.black54),
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        decoration: const InputDecoration(
+          icon: Icon(Icons.search, color: Colors.black54),
           hintText: 'Buscar paciente...',
           border: InputBorder.none,
         ),
@@ -202,10 +215,11 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     );
   }
 
-  Widget _buildReportCard({required ReportItem report, required int index}) {
-    final status = report.isSeen ? 'Visto' : 'NOVO';
-    final statusColor = report.isSeen ? Colors.teal : Colors.redAccent;
-    final seenButtonLabel = report.isSeen ? 'Desmarcar visto' : 'Marcar visto';
+  Widget _buildReportCard({required ReportItem report}) {
+    final isSeen = _seenByUser[report.userId] ?? false;
+    final status = isSeen ? 'Visto' : 'NOVO';
+    final statusColor = isSeen ? Colors.teal : Colors.redAccent;
+    final seenButtonLabel = isSeen ? 'Desmarcar visto' : 'Marcar visto';
 
     return Card(
       color: AppColors.white,
@@ -272,8 +286,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                   child: _buildActionButton(
                     'Ver relatorio',
                     AppColors.smallDetail,
-                    onPressed: () =>
-                        _showReportDialog(report: report, index: index),
+                    onPressed: () => _showReportDialog(report: report),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -281,7 +294,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                   child: _buildActionButton(
                     seenButtonLabel,
                     AppColors.largeDetail,
-                    onPressed: () => _toggleSeen(index),
+                    onPressed: () => _toggleSeen(report.userId),
                   ),
                 ),
               ],
@@ -314,8 +327,9 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
     );
   }
 
-  void _showReportDialog({required ReportItem report, required int index}) {
-    final markLabel = report.isSeen ? 'Desmarcar visto' : 'Marcar visto';
+  void _showReportDialog({required ReportItem report}) {
+    final isSeen = _seenByUser[report.userId] ?? false;
+    final markLabel = isSeen ? 'Desmarcar visto' : 'Marcar visto';
 
     showDialog(
       context: context,
@@ -349,7 +363,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Distribuição de emoções:',
+                  'Distribuicao de emocoes:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
@@ -360,7 +374,7 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                _toggleSeen(index);
+                _toggleSeen(report.userId);
                 Navigator.of(context).pop();
               },
               child: Text(markLabel),
@@ -448,4 +462,194 @@ class _RelatoriosProfissionalState extends State<RelatoriosProfissional> {
       ),
     );
   }
+
+  List<ReportItem> _buildReports({
+    required Map<String, Map<String, dynamic>> usersById,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> sentimentDocs,
+  }) {
+    final Map<String, _UserSentimentAggregate> byUser = {};
+
+    for (final doc in sentimentDocs) {
+      final userRef = doc.reference.parent.parent;
+      if (userRef == null) {
+        continue;
+      }
+
+      final data = doc.data();
+      if (!_isSharedWithProfessional(data)) {
+        continue;
+      }
+
+      final rawLabel = (data['label'] ?? '').toString().trim();
+      if (rawLabel.isEmpty) {
+        continue;
+      }
+
+      final dateValue = data['date'];
+      DateTime? date;
+      if (dateValue is Timestamp) {
+        date = dateValue.toDate();
+      }
+
+      final aggregate = byUser.putIfAbsent(
+        userRef.id,
+        () => _UserSentimentAggregate(),
+      );
+
+      aggregate.total += 1;
+      aggregate.counts[rawLabel] = (aggregate.counts[rawLabel] ?? 0) + 1;
+
+      if (date != null) {
+        aggregate.firstDate =
+            aggregate.firstDate == null || date.isBefore(aggregate.firstDate!)
+            ? date
+            : aggregate.firstDate;
+
+        aggregate.lastDate =
+            aggregate.lastDate == null || date.isAfter(aggregate.lastDate!)
+            ? date
+            : aggregate.lastDate;
+      }
+    }
+
+    final reports = byUser.entries.map((entry) {
+      final userId = entry.key;
+      final aggregate = entry.value;
+      final userMap = usersById[userId];
+      final userName = (userMap?['name'] ?? '').toString().trim();
+
+      final emotions = _buildEmotionDistribution(
+        counts: aggregate.counts,
+        total: aggregate.total,
+      );
+
+      final subtitle = _buildSubtitle(
+        firstDate: aggregate.firstDate,
+        lastDate: aggregate.lastDate,
+        total: aggregate.total,
+      );
+
+      return ReportItem(
+        userId: userId,
+        name: userName.isEmpty ? 'Paciente sem nome' : userName,
+        subtitle: subtitle,
+        emotions: emotions,
+      );
+    }).toList();
+
+    reports.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    return reports;
+  }
+
+  bool _isSharedWithProfessional(Map<String, dynamic> data) {
+    final hasAnyShareFlag =
+        data.containsKey('sharedWithProfessional') ||
+        data.containsKey('shared') ||
+        data.containsKey('isShared');
+
+    if (!hasAnyShareFlag) {
+      // Backward compatibility: if no sharing flag exists yet, keep showing records.
+      return true;
+    }
+
+    return data['sharedWithProfessional'] == true ||
+        data['shared'] == true ||
+        data['isShared'] == true;
+  }
+
+  List<EmotionDistribution> _buildEmotionDistribution({
+    required Map<String, int> counts,
+    required int total,
+  }) {
+    final labels = counts.keys.toList()
+      ..sort((a, b) => counts[b]!.compareTo(counts[a]!));
+
+    return labels
+        .map((label) {
+          final percent = ((counts[label]! / total) * 100).round();
+          return EmotionDistribution(
+            label: label,
+            percent: percent,
+            color: _colorForLabel(label),
+            icon: _iconForLabel(label),
+          );
+        })
+        .where((emotion) => emotion.percent > 0)
+        .toList();
+  }
+
+  String _buildSubtitle({
+    required DateTime? firstDate,
+    required DateTime? lastDate,
+    required int total,
+  }) {
+    final monthNames = [
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
+    ];
+
+    if (firstDate == null || lastDate == null) {
+      return 'Relatorio compartilhado · $total registros';
+    }
+
+    final firstLabel =
+        '${firstDate.day.toString().padLeft(2, '0')} ${monthNames[firstDate.month - 1]}';
+    final lastLabel =
+        '${lastDate.day.toString().padLeft(2, '0')} ${monthNames[lastDate.month - 1]}';
+
+    return 'Relatorio · $firstLabel - $lastLabel · ${lastDate.year}';
+  }
+
+  IconData _iconForLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'calmo':
+        return Icons.sentiment_satisfied;
+      case 'feliz':
+        return Icons.sentiment_very_satisfied;
+      case 'ansioso':
+        return Icons.sentiment_neutral;
+      case 'irritado':
+        return Icons.sentiment_dissatisfied;
+      case 'triste':
+        return Icons.sentiment_very_dissatisfied;
+      default:
+        return Icons.mood;
+    }
+  }
+
+  Color _colorForLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'calmo':
+        return const Color(0xFF188D14);
+      case 'feliz':
+        return const Color(0xFF2E91D9);
+      case 'ansioso':
+        return const Color(0xFFE5C92E);
+      case 'irritado':
+        return const Color(0xFFF25E5E);
+      case 'triste':
+        return const Color(0xFF8E4EC6);
+      default:
+        return Colors.grey;
+    }
+  }
+}
+
+class _UserSentimentAggregate {
+  final Map<String, int> counts = {};
+  int total = 0;
+  DateTime? firstDate;
+  DateTime? lastDate;
 }

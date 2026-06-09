@@ -5,6 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../models/app_user.dart';
+import 'home_screen.dart';
+import 'relatorios_profissional.dart';
+import '../models/profissional_model.dart';
+
+enum _AccountType { user, professional }
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
+  _AccountType _accountType = _AccountType.user;
 
   Future<void> _register() async {
     final name = _nameController.text.trim();
@@ -47,7 +53,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      final appUser = AppUser(uid: firebaseUser.uid, name: name, email: email);
+      final role = _accountType == _AccountType.professional
+          ? 'professional'
+          : 'user';
+
+      final appUser = AppUser(
+        uid: firebaseUser.uid,
+        name: name,
+        email: email,
+        role: role,
+      );
 
       await _userService.saveUser(appUser);
 
@@ -55,7 +70,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(content: Text('Cadastro realizado com sucesso!')),
       );
 
-      Navigator.pop(context);
+      final isProfessional = role == 'professional';
+
+      if (isProfessional) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RelatoriosProfissional(
+              profissional: ProfissionalModel(
+                name: appUser.name,
+                email: appUser.email,
+                password: '',
+              ),
+            ),
+          ),
+          (route) => false,
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen(user: appUser)),
+          (route) => false,
+        );
+      }
     } on FirebaseAuthException catch (e) {
       String message = 'Erro ao cadastrar.';
 
@@ -71,8 +108,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     }
-
-    Navigator.pop(context);
   }
 
   @override
@@ -109,11 +144,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Cadastre-se direto no código, sem banco de dados.',
+                'Escolha o tipo da conta para direcionar o login.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.text),
               ),
               const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<_AccountType>(
+                    value: _accountType,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(
+                        value: _AccountType.user,
+                        child: Text('Sou usuário'),
+                      ),
+                      DropdownMenuItem(
+                        value: _AccountType.professional,
+                        child: Text('Sou profissional'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() {
+                        _accountType = value;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               CustomTextField(
                 controller: _nameController,
                 label: 'Nome',
