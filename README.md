@@ -41,7 +41,7 @@ Corrija os problemas indicados pelo comando antes de continuar.
 Depois de baixar ou extrair o projeto, entre na pasta principal:
 
 ```bash
-cd mindcare-1
+cd mindcare
 ```
 
 ### 2. Instale as dependências
