@@ -1,7 +1,7 @@
 # Projeto de Programação para dispositivos Móveis: Mindcare
 | Alunos |Funções | Video
 | ----| ---- | ---- |
-| Pedro Anchieta Santos | Home e botão de emergência. |
+| Pedro Anchieta Santos | Home e botão de emergência. | https://youtu.be/aYAKNuIpok8 |
 | Victtor Hugo Santos | Calendário e cadastro de emoções. | https://youtu.be/_1CJ9LqOQnM
 | Yuri Ferro Soares | Telas de Relatorios. | https://youtu.be/vJM8UUkjWHI
 |João Vitor Rodrigues | Tela de perfil. | https://screenapp.io/app/v/LuAypsn-C-
