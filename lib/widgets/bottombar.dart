@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import '../constants/app_colors.dart';
+import '../screens/respiration_screen.dart';
 
 class BottomBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
 
   const BottomBar({super.key, required this.currentIndex, required this.onTap});
+
+  static const List<String> _frasesDeApoio = [
+    'Você é mais forte do que pensa. Cada dia é uma nova oportunidade.',
+    'Está tudo bem não estar bem. O importante é pedir ajuda quando precisa.',
+    'Sua vida importa. Suas emoções são válidas e você merece ser feliz.',
+    'Hoje pode ser difícil, mas amanhã é uma nova chance de recomeçar.',
+    'Você não está sozinho. Existem pessoas que se importam com você.',
+    'Sinta-se à vontade para descansar. Você não precisa ser perfeito.',
+    'As dificuldades são temporárias. Você consegue superar isso.',
+    'Seu valor não depende do que você realiza. Você é digno de amor.',
+    'Permita-se sentir todas as emoções. Isso faz parte de ser humano.',
+    'Cada pequeno passo é um progresso. Comemore suas conquistas, por menores que sejam.',
+  ];
+
+  String _obterFraseAleatoria() {
+    final random = Random();
+    return _frasesDeApoio[random.nextInt(_frasesDeApoio.length)];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +55,7 @@ class BottomBar extends StatelessWidget {
           ),
           _EmergencyBottomBarItem(
             isSelected: currentIndex == 2,
+            obterFrase: _obterFraseAleatoria,
             onTap: () {
               showModalBottomSheet(
                 context: context,
@@ -114,7 +135,15 @@ class BottomBar extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RespirationScreen(),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.destaque,
                             shape: RoundedRectangleBorder(
@@ -134,7 +163,75 @@ class BottomBar extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            final frase = _obterFraseAleatoria();
+                            Navigator.pop(context);
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) => AlertDialog(
+                                backgroundColor: AppColors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: Container(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: AppColors.smallDetail,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '💙 Frase de Apoio',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.text,
+                                    ),
+                                  ),
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      frase,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontStyle: FontStyle.italic,
+                                        color: AppColors.text,
+                                        height: 1.6,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                ),
+                                actions: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.smallDetail,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Obrigado',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.destaque,
                             shape: RoundedRectangleBorder(
@@ -222,10 +319,12 @@ class _BottomBarItem extends StatelessWidget {
 class _EmergencyBottomBarItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
+  final Function obterFrase;
 
   const _EmergencyBottomBarItem({
     required this.isSelected,
     required this.onTap,
+    required this.obterFrase,
   });
 
   @override
